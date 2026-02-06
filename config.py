@@ -30,9 +30,20 @@ def validate_credentials():
     """Valida que las credenciales estén configuradas. Solo se llama cuando se necesitan."""
     if not CLIENT_ID or not CLIENT_SECRET:
         raise ValueError(
-            "ERROR: GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET deben estar configurados en .env\n"
-            "Copia env.example a .env y completa tus credenciales.\n"
-            "NOTA: Las funciones de descarga NO requieren estas credenciales."
+            "\n" + "="*70 + "\n"
+            "⚠️  CREDENCIALES OAuth2 NO CONFIGURADAS\n"
+            "="*70 + "\n\n"
+            "Para usar funciones que requieren autenticación (comentar, estadísticas, etc.),\n"
+            "necesitas configurar credenciales OAuth2.\n\n"
+            "Opciones:\n"
+            "1. Configuración rápida (recomendado):\n"
+            "   python setup_simple.py\n\n"
+            "2. Configuración completa con tus propias credenciales:\n"
+            "   python setup.py\n\n"
+            "3. Usar credenciales compartidas:\n"
+            "   Crea un archivo .env con GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET\n\n"
+            "NOTA: Las funciones de descarga NO requieren estas credenciales.\n"
+            "="*70 + "\n"
         )
 
 # Configuración de la API

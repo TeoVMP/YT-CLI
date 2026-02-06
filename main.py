@@ -885,10 +885,11 @@ Ejemplos de uso:
                     print("✗ No se encontraron comentarios para exportar.")
                     sys.exit(1)
         
-        # Modos que requieren autenticación OAuth2 (comentarios)
-        elif any([args.video_id, args.comment, args.get_comments, args.delete_comment,
-                  args.my_comments, args.reply, args.update_comment, args.comment_replies,
-                  args.comment_info, args.monitor]):
+        # Modos que requieren autenticación OAuth2 (comentarios y gestión de comentarios)
+        # Solo se autentica cuando realmente se necesita
+        elif any([args.comment, args.delete_comment, args.my_comments, args.reply, 
+                  args.update_comment, args.comment_replies, args.comment_info, args.monitor]) or \
+             (args.video_id and args.comment) or (args.get_comments and args.video_id):
             # Verificar si existe archivo .env
             if not os.path.exists('.env'):
                 print("\n" + "="*70)
@@ -918,24 +919,14 @@ Ejemplos de uso:
             print("✓ NO se solicita acceso a email/Gmail")
             print("✓ Los tokens solo permiten acciones en YouTube")
             print("="*60 + "\n")
-            # Inicializar cliente de YouTube
-            print("Inicializando cliente de YouTube...")
-            print("💡 Se abrirá tu navegador para que inicies sesión con tu cuenta personal")
-            
             # Validar credenciales antes de inicializar cliente
             try:
                 config.validate_credentials()
             except ValueError as e:
-                print("\n" + "="*70)
-                print("⚠ ERROR DE CONFIGURACIÓN")
-                print("="*70)
-                print(f"\n{e}")
-                print("\n📋 Solución rápida:")
-                print("   py setup.py")
-                print("\nO edita manualmente el archivo .env con tus credenciales.")
-                print("="*70 + "\n")
+                print(e)
                 sys.exit(1)
             
+            # Inicializar cliente de YouTube (la autenticación se hará automáticamente si es necesaria)
             youtube_client = YouTubeClient()
             
             # Modo: Publicar comentario
@@ -963,6 +954,7 @@ Ejemplos de uso:
                     sys.exit(1)
             
             # Modo: Obtener comentarios
+            # Modo: Obtener comentarios (requiere autenticación)
             elif args.video_id and args.get_comments:
                 # Extraer ID del video si es una URL
                 video_id = extract_video_id(args.video_id)
