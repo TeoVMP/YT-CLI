@@ -469,11 +469,17 @@ Ejemplos de uso:
     
     # Verificar si necesita configuración (solo para funciones que realmente la requieren)
     # NO bloquear búsqueda, descarga, info, etc.
-    functions_requiring_auth = [args.stats, args.top_comments, args.export_comments, 
-                                args.comment, args.monitor, args.get_comments,
-                                args.delete_comment, args.my_comments, args.reply,
-                                args.update_comment, args.comment_replies, args.comment_info,
-                                args.download_metadata]
+    functions_requiring_auth = [
+        args.stats, args.top_comments, args.export_comments, 
+        args.comment, args.monitor, args.get_comments,
+        getattr(args, 'delete_comment', None),
+        getattr(args, 'my_comments', None),
+        getattr(args, 'reply', None),
+        getattr(args, 'update_comment', None),
+        getattr(args, 'comment_replies', None),
+        getattr(args, 'comment_info', None),
+        getattr(args, 'download_metadata', None)
+    ]
     
     if not os.path.exists('.env') and any(functions_requiring_auth):
         print("\n" + "="*70)
