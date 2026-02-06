@@ -52,8 +52,41 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Ejemplos de uso:
-  # Comentar
+  # Comentar en un video
   python main.py --video-id dQw4w9WgXcQ --comment "¡Excelente video!"
+  
+  # Listar mis comentarios en un video
+  python main.py --my-comments dQw4w9WgXcQ
+  
+  # Listar todos mis comentarios
+  python main.py --my-comments
+  
+  # Eliminar un comentario
+  python main.py --delete-comment COMMENT_ID
+  
+  # Responder a un comentario
+  python main.py --reply COMMENT_ID --reply-text "Mi respuesta"
+  
+  # Actualizar un comentario
+  python main.py --update-comment COMMENT_ID --new-text "Texto actualizado"
+  
+  # Ver respuestas de un comentario
+  python main.py --comment-replies COMMENT_ID
+  
+  # Ver información de un comentario
+  python main.py --comment-info COMMENT_ID
+  
+  # Obtener comentarios de un video
+  python main.py --video-id dQw4w9WgXcQ --get-comments
+  
+  # Ver estadísticas de un video
+  python main.py --stats dQw4w9WgXcQ
+  
+  # Ver comentarios destacados
+  python main.py --top-comments dQw4w9WgXcQ
+  
+  # Exportar comentarios
+  python main.py --export-comments dQw4w9WgXcQ --grep-format
   
   # Descargar video MP4
   python main.py --download-video "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
@@ -646,8 +679,153 @@ Ejemplos de uso:
                         print(f"\n{i}. {comment['text'][:50]}...")
                         print(f"   Autor: {comment['author']}")
                         print(f"   Likes: {comment['like_count']}")
+                        print(f"   ID: {comment['id']}")
                 else:
                     print("  No se encontraron comentarios.")
+            
+            # Modo: Eliminar comentario
+            elif args.delete_comment:
+                print("\n" + "="*60)
+                print("ELIMINAR COMENTARIO")
+                print("="*60 + "\n")
+                
+                print(f"🗑️  Eliminando comentario: {args.delete_comment}")
+                confirm = input("¿Estás seguro? (s/n): ").strip().lower()
+                
+                if confirm == 's':
+                    success = youtube_client.delete_comment(args.delete_comment)
+                    if success:
+                        print("\n✓ Comentario eliminado exitosamente.")
+                    else:
+                        print("\n✗ Error eliminando comentario.")
+                        sys.exit(1)
+                else:
+                    print("✗ Operación cancelada.")
+            
+            # Modo: Listar mis comentarios
+            elif args.my_comments:
+                print("\n" + "="*60)
+                print("MIS COMENTARIOS")
+                print("="*60 + "\n")
+                
+                if args.my_comments == 'all':
+                    print("📝 Obteniendo todos tus comentarios...")
+                    comments = youtube_client.get_my_comments()
+                else:
+                    # Extraer ID del video si es una URL
+                    video_id = extract_video_id(args.my_comments)
+                    if not video_id:
+                        print(f"✗ No se pudo extraer el ID del video de: {args.my_comments}")
+                        sys.exit(1)
+                    
+                    print(f"📝 Obteniendo tus comentarios en el video: {video_id}")
+                    comments = youtube_client.get_my_comments(video_id)
+                
+                if comments:
+                    print(f"\n✓ Encontrados {len(comments)} de tus comentarios:\n")
+                    for i, comment in enumerate(comments, 1):
+                        print(f"[{i}] " + "-"*76)
+                        print(f"📹 Video ID: {comment.get('video_id', 'N/A')}")
+                        print(f"💬 Comentario ID: {comment['id']}")
+                        print(f"👍 Likes: {comment['like_count']}")
+                        if comment.get('reply_count', 0) > 0:
+                            print(f"💬 Respuestas: {comment['reply_count']}")
+                        print(f"📅 Fecha: {comment['published_at']}")
+                        print("-"*80)
+                        print(f"{comment['text']}")
+                        print()
+                else:
+                    print("  No se encontraron comentarios tuyos.")
+            
+            # Modo: Responder a comentario
+            elif args.reply:
+                if not args.reply_text:
+                    print("✗ Error: --reply-text es requerido cuando usas --reply")
+                    print("   Ejemplo: py main.py --reply COMMENT_ID --reply-text 'Tu respuesta'")
+                    sys.exit(1)
+                
+                print("\n" + "="*60)
+                print("RESPONDER A COMENTARIO")
+                print("="*60 + "\n")
+                
+                print(f"💬 Respondiendo al comentario: {args.reply}")
+                print(f"📝 Texto: {args.reply_text}")
+                
+                result = youtube_client.reply_to_comment(args.reply, args.reply_text)
+                
+                if result.get('success'):
+                    print("\n✓ Respuesta publicada exitosamente!")
+                else:
+                    print(f"\n✗ Error: {result.get('error', 'Error desconocido')}")
+                    sys.exit(1)
+            
+            # Modo: Actualizar comentario
+            elif args.update_comment:
+                if not args.new_text:
+                    print("✗ Error: --new-text es requerido cuando usas --update-comment")
+                    print("   Ejemplo: py main.py --update-comment COMMENT_ID --new-text 'Nuevo texto'")
+                    sys.exit(1)
+                
+                print("\n" + "="*60)
+                print("ACTUALIZAR COMENTARIO")
+                print("="*60 + "\n")
+                
+                print(f"✏️  Actualizando comentario: {args.update_comment}")
+                print(f"📝 Nuevo texto: {args.new_text}")
+                
+                result = youtube_client.update_comment(args.update_comment, args.new_text)
+                
+                if result.get('success'):
+                    print("\n✓ Comentario actualizado exitosamente!")
+                else:
+                    print(f"\n✗ Error: {result.get('error', 'Error desconocido')}")
+                    sys.exit(1)
+            
+            # Modo: Obtener respuestas de un comentario
+            elif args.comment_replies:
+                print("\n" + "="*60)
+                print("RESPUESTAS DEL COMENTARIO")
+                print("="*60 + "\n")
+                
+                print(f"💬 Obteniendo respuestas del comentario: {args.comment_replies}")
+                replies = youtube_client.get_comment_replies(args.comment_replies)
+                
+                if replies:
+                    print(f"\n✓ Encontradas {len(replies)} respuestas:\n")
+                    for i, reply in enumerate(replies, 1):
+                        print(f"[{i}] " + "-"*76)
+                        print(f"👤 Autor: {reply['author']}")
+                        print(f"👍 Likes: {reply['like_count']}")
+                        print(f"📅 Fecha: {reply['published_at']}")
+                        print(f"🆔 ID: {reply['id']}")
+                        print("-"*80)
+                        print(f"{reply['text']}")
+                        print()
+                else:
+                    print("  No se encontraron respuestas.")
+            
+            # Modo: Información de comentario
+            elif args.comment_info:
+                print("\n" + "="*60)
+                print("INFORMACIÓN DEL COMENTARIO")
+                print("="*60 + "\n")
+                
+                print(f"📋 Obteniendo información del comentario: {args.comment_info}")
+                info = youtube_client.get_comment_info(args.comment_info)
+                
+                if info:
+                    print(f"\n📝 Texto: {info['text']}")
+                    print(f"👤 Autor: {info['author']}")
+                    print(f"🆔 ID: {info['id']}")
+                    print(f"👍 Likes: {info['like_count']}")
+                    print(f"📅 Publicado: {info['published_at']}")
+                    if info.get('updated_at'):
+                        print(f"✏️  Actualizado: {info['updated_at']}")
+                    if info.get('author_channel_id'):
+                        print(f"📺 Canal del autor: {info['author_channel_id']}")
+                else:
+                    print("✗ No se pudo obtener información del comentario.")
+                    sys.exit(1)
             
             # Modo: Monitoreo continuo
             elif args.monitor and args.video_id:
@@ -666,7 +844,10 @@ Ejemplos de uso:
                 moderator.start_monitoring([video_id])
             
             # Modo interactivo (solo si no se proporcionó ningún argumento)
-            elif not any([args.video_id, args.comment, args.moderate, args.monitor, args.get_comments]):
+            elif not any([args.video_id, args.comment, args.moderate, args.monitor, args.get_comments,
+                          args.delete_comment, args.my_comments, args.reply, args.update_comment,
+                          args.comment_replies, args.comment_info, args.stats, args.top_comments,
+                          args.export_comments]):
                 print("\n" + "="*60)
                 print("MODO INTERACTIVO")
                 print("="*60)
@@ -676,8 +857,18 @@ Ejemplos de uso:
                 print("3. Descargar audio MP3")
                 print("4. Ver información de un video")
                 print("5. Obtener comentarios de un video")
+                print("6. Ver estadísticas de un video")
+                print("7. Ver comentarios destacados")
+                print("8. Exportar comentarios")
+                print("9. Listar mis comentarios")
+                print("10. Eliminar un comentario")
+                print("11. Responder a un comentario")
+                print("12. Actualizar un comentario")
+                print("13. Ver respuestas de un comentario")
+                print("14. Ver información de un comentario")
+                print("15. Salir")
                 
-                option = input("\nSelecciona una opción (1-5): ").strip()
+                option = input("\nSelecciona una opción (1-15): ").strip()
                 
                 if option == '1':
                     video_id = input("\nIngresa el ID del video: ").strip()
@@ -744,9 +935,10 @@ Ejemplos de uso:
                         print(f"👁️  Vistas: {info['view_count']:,}")
                 
                 elif option == '5':
-                    video_id = input("\nIngresa el ID del video: ").strip()
+                    video_id_or_url = input("\nIngresa el ID o URL del video: ").strip()
+                    video_id = extract_video_id(video_id_or_url)
                     if not video_id:
-                        print("✗ ID de video requerido.")
+                        print("✗ ID de video requerido o URL inválida.")
                         sys.exit(1)
                     
                     comments = youtube_client.get_comments(video_id)
@@ -756,8 +948,206 @@ Ejemplos de uso:
                             print(f"\n{i}. {comment['text'][:50]}...")
                             print(f"   Autor: {comment['author']}")
                             print(f"   Likes: {comment['like_count']}")
+                            print(f"   ID: {comment['id']}")
                     else:
                         print("  No se encontraron comentarios.")
+                
+                elif option == '6':
+                    video_id_or_url = input("\nIngresa el ID o URL del video: ").strip()
+                    video_id = extract_video_id(video_id_or_url)
+                    if not video_id:
+                        print("✗ ID de video requerido o URL inválida.")
+                        sys.exit(1)
+                    
+                    stats = youtube_client.get_video_stats(video_id)
+                    if stats:
+                        print(f"\n📹 Título: {stats['title']}")
+                        print(f"👤 Canal: {stats['channel_title']}")
+                        print(f"📅 Publicado: {stats['published_at']}")
+                        print(f"⏱️  Duración: {stats['duration_formatted']}")
+                        print(f"👁️  Vistas: {stats['view_count']:,}")
+                        print(f"👍 Likes: {stats['like_count']:,}")
+                        print(f"💬 Comentarios: {stats['comment_count']:,}")
+                        if stats['view_count'] > 0:
+                            engagement = ((stats['like_count'] + stats['comment_count']) / stats['view_count']) * 100
+                            print(f"\n📊 Engagement Rate: {engagement:.2f}%")
+                    else:
+                        print("✗ Error obteniendo estadísticas del video.")
+                
+                elif option == '7':
+                    video_id_or_url = input("\nIngresa el ID o URL del video: ").strip()
+                    video_id = extract_video_id(video_id_or_url)
+                    if not video_id:
+                        print("✗ ID de video requerido o URL inválida.")
+                        sys.exit(1)
+                    
+                    max_comments_str = input("Número máximo de comentarios (default 10): ").strip()
+                    max_comments = int(max_comments_str) if max_comments_str.isdigit() else 10
+                    top_comments = youtube_client.get_top_comments(video_id, max_comments=max_comments)
+                    if top_comments:
+                        print(f"✓ Encontrados {len(top_comments)} comentarios destacados:\n")
+                        for i, comment in enumerate(top_comments, 1):
+                            print(f"[{i}] " + "-"*76)
+                            print(f"👤 Autor: {comment['author']}")
+                            print(f"👍 Likes: {comment['like_count']}")
+                            print(f"🆔 ID: {comment['id']}")
+                            print("-"*80)
+                            print(f"{comment['text']}")
+                            print()
+                    else:
+                        print("  No se encontraron comentarios.")
+                
+                elif option == '8':
+                    video_id_or_url = input("\nIngresa el ID o URL del video: ").strip()
+                    video_id = extract_video_id(video_id_or_url)
+                    if not video_id:
+                        print("✗ ID de video requerido o URL inválida.")
+                        sys.exit(1)
+                    
+                    max_comments_str = input("Número máximo de comentarios (default 1000): ").strip()
+                    max_comments = int(max_comments_str) if max_comments_str.isdigit() else 1000
+                    grep_format_str = input("¿Exportar en formato grep? (s/n): ").strip().lower()
+                    grep_format = (grep_format_str == 's')
+
+                    stats = youtube_client.get_video_stats(video_id)
+                    video_title = stats['title'] if stats else None
+                    
+                    comments = youtube_client.get_comments(video_id, max_results=max_comments)
+                    
+                    if comments:
+                        print(f"✓ Obtenidos {len(comments)} comentarios")
+                        exporter = CommentExporter()
+                        file_path = exporter.export_comments_to_file(
+                            video_id=video_id,
+                            video_title=video_title,
+                            comments=comments,
+                            grep_format=grep_format
+                        )
+                        if file_path:
+                            print(f"\n✓ Comentarios exportados exitosamente a: {file_path}")
+                        else:
+                            print("✗ Error exportando comentarios.")
+                    else:
+                        print("  No se encontraron comentarios para exportar.")
+                
+                elif option == '9':
+                    video_id_or_url = input("\nIngresa el ID o URL del video (o Enter para todos): ").strip()
+                    if video_id_or_url:
+                        video_id = extract_video_id(video_id_or_url)
+                        if not video_id:
+                            print("✗ URL inválida.")
+                            sys.exit(1)
+                        comments = youtube_client.get_my_comments(video_id)
+                        print(f"\n📝 Tus comentarios en el video {video_id}:")
+                    else:
+                        comments = youtube_client.get_my_comments()
+                        print(f"\n📝 Todos tus comentarios:")
+                    
+                    if comments:
+                        print(f"\n✓ Encontrados {len(comments)} comentarios:\n")
+                        for i, comment in enumerate(comments, 1):
+                            print(f"[{i}] " + "-"*76)
+                            print(f"📹 Video ID: {comment.get('video_id', 'N/A')}")
+                            print(f"💬 Comentario ID: {comment['id']}")
+                            print(f"👍 Likes: {comment['like_count']}")
+                            print(f"📅 Fecha: {comment['published_at']}")
+                            print("-"*80)
+                            print(f"{comment['text']}")
+                            print()
+                    else:
+                        print("  No se encontraron comentarios tuyos.")
+                
+                elif option == '10':
+                    comment_id = input("\nIngresa el ID del comentario a eliminar: ").strip()
+                    if not comment_id:
+                        print("✗ ID de comentario requerido.")
+                        sys.exit(1)
+                    
+                    confirm = input("¿Estás seguro de eliminar este comentario? (s/n): ").strip().lower()
+                    if confirm == 's':
+                        success = youtube_client.delete_comment(comment_id)
+                        if success:
+                            print("\n✓ Comentario eliminado exitosamente.")
+                        else:
+                            print("\n✗ Error eliminando comentario.")
+                    else:
+                        print("✗ Operación cancelada.")
+                
+                elif option == '11':
+                    comment_id = input("\nIngresa el ID del comentario al que responder: ").strip()
+                    if not comment_id:
+                        print("✗ ID de comentario requerido.")
+                        sys.exit(1)
+                    
+                    reply_text = input("Ingresa el texto de la respuesta: ").strip()
+                    if not reply_text:
+                        print("✗ Texto de respuesta requerido.")
+                        sys.exit(1)
+                    
+                    result = youtube_client.reply_to_comment(comment_id, reply_text)
+                    if result.get('success'):
+                        print("\n✓ Respuesta publicada exitosamente!")
+                    else:
+                        print(f"\n✗ Error: {result.get('error', 'Error desconocido')}")
+                
+                elif option == '12':
+                    comment_id = input("\nIngresa el ID del comentario a actualizar: ").strip()
+                    if not comment_id:
+                        print("✗ ID de comentario requerido.")
+                        sys.exit(1)
+                    
+                    new_text = input("Ingresa el nuevo texto del comentario: ").strip()
+                    if not new_text:
+                        print("✗ Nuevo texto requerido.")
+                        sys.exit(1)
+                    
+                    result = youtube_client.update_comment(comment_id, new_text)
+                    if result.get('success'):
+                        print("\n✓ Comentario actualizado exitosamente!")
+                    else:
+                        print(f"\n✗ Error: {result.get('error', 'Error desconocido')}")
+                
+                elif option == '13':
+                    comment_id = input("\nIngresa el ID del comentario: ").strip()
+                    if not comment_id:
+                        print("✗ ID de comentario requerido.")
+                        sys.exit(1)
+                    
+                    replies = youtube_client.get_comment_replies(comment_id)
+                    if replies:
+                        print(f"\n✓ Encontradas {len(replies)} respuestas:\n")
+                        for i, reply in enumerate(replies, 1):
+                            print(f"[{i}] " + "-"*76)
+                            print(f"👤 Autor: {reply['author']}")
+                            print(f"👍 Likes: {reply['like_count']}")
+                            print(f"🆔 ID: {reply['id']}")
+                            print("-"*80)
+                            print(f"{reply['text']}")
+                            print()
+                    else:
+                        print("  No se encontraron respuestas.")
+                
+                elif option == '14':
+                    comment_id = input("\nIngresa el ID del comentario: ").strip()
+                    if not comment_id:
+                        print("✗ ID de comentario requerido.")
+                        sys.exit(1)
+                    
+                    info = youtube_client.get_comment_info(comment_id)
+                    if info:
+                        print(f"\n📝 Texto: {info['text']}")
+                        print(f"👤 Autor: {info['author']}")
+                        print(f"🆔 ID: {info['id']}")
+                        print(f"👍 Likes: {info['like_count']}")
+                        print(f"📅 Publicado: {info['published_at']}")
+                        if info.get('updated_at'):
+                            print(f"✏️  Actualizado: {info['updated_at']}")
+                    else:
+                        print("✗ No se pudo obtener información del comentario.")
+                
+                elif option == '15':
+                    print("Saliendo...")
+                    sys.exit(0)
                 
                 elif option == '6':
                     from vlc_player import VLCPlayer

@@ -424,3 +424,318 @@ class YouTubeClient:
         except Exception as e:
             print(f"✗ Error eliminando comentario: {str(e)}")
             return False
+    
+    def get_my_comments(self, video_id: str = None, max_results: int = 50) -> list:
+        """
+        Obtiene tus propios comentarios en un video o en todos los videos.
+        
+        Args:
+            video_id: ID del video (opcional, si no se proporciona busca en todos)
+            max_results: Número máximo de comentarios a obtener
+            
+        Returns:
+            list: Lista de tus comentarios
+        """
+        if not self.service:
+            raise Exception("Servicio de YouTube no inicializado.")
+        
+        try:
+            # Obtener información del canal del usuario autenticado
+            channels_response = self.service.channels().list(
+                part='contentDetails',
+                mine=True
+            ).execute()
+            
+            if not channels_response.get('items'):
+                print("✗ No se pudo obtener información de tu canal.")
+                return []
+            
+            channel_id = channels_response['items'][0]['id']
+            
+            comments = []
+            next_page_token = None
+            
+            # Obtener comentarios del canal
+            while len(comments) < max_results:
+                request_max = min(100, max_results - len(comments))
+                
+                request_params = {
+                    'part': 'snippet',
+                    'allThreadsRelatedToChannelId': channel_id,
+                    'maxResults': request_max,
+                    'pageToken': next_page_token
+                }
+                
+                # Si se especifica video_id, filtrar por video
+                if video_id:
+                    request_params['videoId'] = video_id
+                
+                request = self.service.commentThreads().list(**request_params)
+                response = request.execute()
+                
+                for item in response.get('items', []):
+                    comment = item['snippet']['topLevelComment']['snippet']
+                    item_video_id = item['snippet'].get('videoId')
+                    
+                    # Si se especificó video_id, solo incluir comentarios de ese video
+                    if video_id and item_video_id != video_id:
+                        continue
+                    
+                    comments.append({
+                        'id': item['id'],
+                        'video_id': item_video_id,
+                        'text': comment['textOriginal'],
+                        'author': comment['authorDisplayName'],
+                        'published_at': comment['publishedAt'],
+                        'updated_at': comment.get('updatedAt'),
+                        'like_count': comment.get('likeCount', 0),
+                        'reply_count': item['snippet'].get('totalReplyCount', 0),
+                        'is_mine': True
+                    })
+                
+                next_page_token = response.get('nextPageToken')
+                if not next_page_token or len(comments) >= max_results:
+                    break
+            
+            return comments[:max_results]
+            
+        except HttpError as e:
+            error_details = json.loads(e.content.decode('utf-8'))
+            error_message = error_details.get('error', {}).get('message', 'Error desconocido')
+            print(f"✗ Error obteniendo tus comentarios: {error_message}")
+            return []
+        except Exception as e:
+            print(f"✗ Error obteniendo tus comentarios: {str(e)}")
+            return []
+    
+    def reply_to_comment(self, comment_id: str, reply_text: str) -> dict:
+        """
+        Responde a un comentario.
+        
+        Args:
+            comment_id: ID del comentario al que responder (thread ID)
+            reply_text: Texto de la respuesta
+            
+        Returns:
+            dict: Resultado de la operación
+        """
+        if not self.service:
+            raise Exception("Servicio de YouTube no inicializado.")
+        
+        try:
+            request = self.service.comments().insert(
+                part='snippet',
+                body={
+                    'snippet': {
+                        'parentId': comment_id,
+                        'textOriginal': reply_text
+                    }
+                }
+            )
+            
+            response = request.execute()
+            
+            reply_id = response['id']
+            reply_text_posted = response['snippet']['textOriginal']
+            
+            print(f"✓ Respuesta publicada exitosamente!")
+            print(f"  Comentario padre: {comment_id}")
+            print(f"  Respuesta ID: {reply_id}")
+            print(f"  Texto: {reply_text_posted[:50]}...")
+            
+            return {
+                'success': True,
+                'reply_id': reply_id,
+                'parent_id': comment_id,
+                'text': reply_text_posted
+            }
+            
+        except HttpError as e:
+            error_details = json.loads(e.content.decode('utf-8'))
+            error_message = error_details.get('error', {}).get('message', 'Error desconocido')
+            print(f"✗ Error publicando respuesta: {error_message}")
+            return {
+                'success': False,
+                'error': error_message
+            }
+        except Exception as e:
+            print(f"✗ Error publicando respuesta: {str(e)}")
+            return {
+                'success': False,
+                'error': str(e)
+            }
+    
+    def update_comment(self, comment_id: str, new_text: str) -> dict:
+        """
+        Actualiza/edita un comentario existente.
+        
+        Args:
+            comment_id: ID del comentario a actualizar
+            new_text: Nuevo texto del comentario
+            
+        Returns:
+            dict: Resultado de la operación
+        """
+        if not self.service:
+            raise Exception("Servicio de YouTube no inicializado.")
+        
+        try:
+            # Primero obtener el comentario actual para mantener otros datos
+            comment_response = self.service.comments().list(
+                part='snippet',
+                id=comment_id
+            ).execute()
+            
+            if not comment_response.get('items'):
+                return {
+                    'success': False,
+                    'error': 'Comentario no encontrado'
+                }
+            
+            comment = comment_response['items'][0]
+            
+            # Actualizar el comentario
+            request = self.service.comments().update(
+                part='snippet',
+                body={
+                    'id': comment_id,
+                    'snippet': {
+                        'textOriginal': new_text
+                    }
+                }
+            )
+            
+            response = request.execute()
+            
+            updated_text = response['snippet']['textOriginal']
+            
+            print(f"✓ Comentario actualizado exitosamente!")
+            print(f"  Comentario ID: {comment_id}")
+            print(f"  Nuevo texto: {updated_text[:50]}...")
+            
+            return {
+                'success': True,
+                'comment_id': comment_id,
+                'text': updated_text
+            }
+            
+        except HttpError as e:
+            error_details = json.loads(e.content.decode('utf-8'))
+            error_message = error_details.get('error', {}).get('message', 'Error desconocido')
+            print(f"✗ Error actualizando comentario: {error_message}")
+            return {
+                'success': False,
+                'error': error_message
+            }
+        except Exception as e:
+            print(f"✗ Error actualizando comentario: {str(e)}")
+            return {
+                'success': False,
+                'error': str(e)
+            }
+    
+    def get_comment_replies(self, comment_id: str, max_results: int = 20) -> list:
+        """
+        Obtiene las respuestas (replies) de un comentario.
+        
+        Args:
+            comment_id: ID del comentario (thread ID)
+            max_results: Número máximo de respuestas a obtener
+            
+        Returns:
+            list: Lista de respuestas
+        """
+        if not self.service:
+            raise Exception("Servicio de YouTube no inicializado.")
+        
+        try:
+            replies = []
+            next_page_token = None
+            
+            while len(replies) < max_results:
+                request_max = min(100, max_results - len(replies))
+                
+                request = self.service.comments().list(
+                    part='snippet',
+                    parentId=comment_id,
+                    maxResults=request_max,
+                    pageToken=next_page_token
+                )
+                
+                response = request.execute()
+                
+                for item in response.get('items', []):
+                    reply = item['snippet']
+                    replies.append({
+                        'id': item['id'],
+                        'parent_id': comment_id,
+                        'text': reply['textOriginal'],
+                        'author': reply['authorDisplayName'],
+                        'published_at': reply['publishedAt'],
+                        'updated_at': reply.get('updatedAt'),
+                        'like_count': reply.get('likeCount', 0)
+                    })
+                
+                next_page_token = response.get('nextPageToken')
+                if not next_page_token or len(replies) >= max_results:
+                    break
+            
+            return replies[:max_results]
+            
+        except HttpError as e:
+            error_details = json.loads(e.content.decode('utf-8'))
+            error_message = error_details.get('error', {}).get('message', 'Error desconocido')
+            print(f"✗ Error obteniendo respuestas: {error_message}")
+            return []
+        except Exception as e:
+            print(f"✗ Error obteniendo respuestas: {str(e)}")
+            return []
+    
+    def get_comment_info(self, comment_id: str) -> Optional[Dict]:
+        """
+        Obtiene información detallada de un comentario específico.
+        
+        Args:
+            comment_id: ID del comentario
+            
+        Returns:
+            dict: Información del comentario o None
+        """
+        if not self.service:
+            raise Exception("Servicio de YouTube no inicializado.")
+        
+        try:
+            request = self.service.comments().list(
+                part='snippet',
+                id=comment_id
+            )
+            
+            response = request.execute()
+            
+            if not response.get('items'):
+                print(f"✗ Comentario no encontrado: {comment_id}")
+                return None
+            
+            item = response['items'][0]
+            snippet = item['snippet']
+            
+            return {
+                'id': item['id'],
+                'text': snippet['textOriginal'],
+                'author': snippet['authorDisplayName'],
+                'author_channel_id': snippet.get('authorChannelId', {}).get('value'),
+                'published_at': snippet['publishedAt'],
+                'updated_at': snippet.get('updatedAt'),
+                'like_count': snippet.get('likeCount', 0),
+                'moderation_status': snippet.get('moderationStatus'),
+                'viewer_rating': snippet.get('viewerRating')
+            }
+            
+        except HttpError as e:
+            error_details = json.loads(e.content.decode('utf-8'))
+            error_message = error_details.get('error', {}).get('message', 'Error desconocido')
+            print(f"✗ Error obteniendo información del comentario: {error_message}")
+            return None
+        except Exception as e:
+            print(f"✗ Error obteniendo información del comentario: {str(e)}")
+            return None
