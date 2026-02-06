@@ -555,6 +555,26 @@ Ejemplos de uso:
         
         # Modos que requieren autenticación OAuth2 (comentarios)
         else:
+            # Verificar si existe archivo .env
+            if not os.path.exists('.env'):
+                print("\n" + "="*70)
+                print("⚠ CONFIGURACIÓN REQUERIDA")
+                print("="*70)
+                print("\nPara usar funciones de comentarios necesitas configurar credenciales OAuth2.")
+                print("\nOpciones:")
+                print("1. Ejecuta el script de configuración interactiva:")
+                print("   py setup.py")
+                print("\n2. O copia y edita manualmente:")
+                print("   copy env.example .env")
+                print("   # Luego edita .env con tus credenciales")
+                print("\n📖 Guía completa: Lee QUICK_START.md")
+                print("\n" + "="*70 + "\n")
+                sys.exit(1)
+            
+            # Importar módulos de YouTube API solo cuando se necesiten
+            from youtube_client import YouTubeClient
+            from moderator import Moderator
+            
             # Mostrar información de seguridad solo cuando se necesita autenticación
             print("\n" + "="*60)
             print("BOT DE YOUTUBE - AUTENTICACIÓN")
@@ -567,6 +587,21 @@ Ejemplos de uso:
             # Inicializar cliente de YouTube
             print("Inicializando cliente de YouTube...")
             print("💡 Se abrirá tu navegador para que inicies sesión con tu cuenta personal")
+            
+            # Validar credenciales antes de inicializar cliente
+            try:
+                config.validate_credentials()
+            except ValueError as e:
+                print("\n" + "="*70)
+                print("⚠ ERROR DE CONFIGURACIÓN")
+                print("="*70)
+                print(f"\n{e}")
+                print("\n📋 Solución rápida:")
+                print("   py setup.py")
+                print("\nO edita manualmente el archivo .env con tus credenciales.")
+                print("="*70 + "\n")
+                sys.exit(1)
+            
             youtube_client = YouTubeClient()
             
             # Modo: Publicar comentario
