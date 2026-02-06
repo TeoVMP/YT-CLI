@@ -345,8 +345,185 @@ Ejemplos de uso:
             sys.exit(1)
     
     try:
+        # Modo: Login/Autenticación
+        if args.login:
+            # Verificar si existe archivo .env
+            if not os.path.exists('.env'):
+                print("\n" + "="*70)
+                print("⚠ CONFIGURATION REQUIRED")
+                print("="*70)
+                print("\nYou need to configure OAuth2 credentials first.")
+                print("\nOptions:")
+                print("1. Run the interactive setup script:")
+                print("   python setup.py")
+                print("\n2. Or copy and edit manually:")
+                print("   copy env.example .env")
+                print("   # Then edit .env with your credentials")
+                print("\n" + "="*70 + "\n")
+                sys.exit(1)
+            
+            # Importar módulos de YouTube API
+            from youtube_client import YouTubeClient
+            
+            # Validar credenciales antes de inicializar cliente
+            try:
+                config.validate_credentials()
+            except ValueError as e:
+                print("\n" + "="*70)
+                print("⚠ CONFIGURATION ERROR")
+                print("="*70)
+                print(f"\n{e}")
+                print("\n📋 Quick fix:")
+                print("   python setup.py")
+                print("\nOr edit the .env file manually with your credentials.")
+                print("="*70 + "\n")
+                sys.exit(1)
+            
+            print("\n" + "="*60)
+            print("LOGIN / AUTHENTICATION")
+            print("="*60)
+            print("\n📝 You will use your personal Google account")
+            print("✓ Only YouTube API access will be requested")
+            print("✓ NO access to Gmail/email")
+            print("✓ Tokens only allow YouTube actions")
+            print("="*60 + "\n")
+            
+            print("Initializing YouTube client...")
+            print("💡 Your browser will open to sign in with your personal account")
+            
+            try:
+                youtube_client = YouTubeClient()
+                
+                # Verificar autenticación
+                auth_info = youtube_client.get_auth_info()
+                
+                if auth_info['authenticated']:
+                    print("\n✓ Login successful!")
+                    print(f"  Token file: {auth_info['token_file']}")
+                    print(f"  Token valid: {auth_info['token_valid']}")
+                    if auth_info['has_refresh_token']:
+                        print(f"  Refresh token: Available")
+                    print("\nYou can now use all YouTube features.")
+                else:
+                    print("\n⚠ Authentication completed but token may need refresh.")
+                    
+            except Exception as e:
+                print(f"\n✗ Error during login: {str(e)}")
+                sys.exit(1)
+            
+            sys.exit(0)
+        
+        # Modo: Logout
+        elif args.logout:
+            # Verificar si existe archivo .env
+            if not os.path.exists('.env'):
+                print("\n" + "="*70)
+                print("⚠ CONFIGURATION REQUIRED")
+                print("="*70)
+                print("\nNo credentials configured. Nothing to logout from.")
+                print("="*70 + "\n")
+                sys.exit(0)
+            
+            # Importar módulos de YouTube API
+            from youtube_client import YouTubeClient
+            
+            print("\n" + "="*60)
+            print("LOGOUT")
+            print("="*60 + "\n")
+            
+            # Verificar si hay sesión activa
+            token_exists = os.path.exists(config.TOKEN_FILE)
+            
+            if not token_exists:
+                print("ℹ No active session found.")
+                print("  You are already logged out.")
+                sys.exit(0)
+            
+            # Confirmar logout
+            confirm = input("Are you sure you want to logout? (y/n): ").strip().lower()
+            
+            if confirm not in ['y', 'yes']:
+                print("✗ Logout cancelled.")
+                sys.exit(0)
+            
+            # Intentar cargar cliente para revocar token
+            try:
+                config.validate_credentials()
+                youtube_client = YouTubeClient()
+                success = youtube_client.logout()
+                
+                if success:
+                    print("\n✓ Logout successful!")
+                    print("  Your session has been closed.")
+                    print("  Token has been revoked and deleted.")
+                else:
+                    print("\n⚠ Logout completed with warnings.")
+                    print("  Token file deleted locally.")
+                    
+            except Exception as e:
+                # Si hay error, al menos eliminar token local
+                if os.path.exists(config.TOKEN_FILE):
+                    os.remove(config.TOKEN_FILE)
+                    print(f"\n✓ Token file deleted: {config.TOKEN_FILE}")
+                    print("⚠ Could not revoke token on server, but local session is closed.")
+                else:
+                    print(f"\n✗ Error during logout: {str(e)}")
+            
+            sys.exit(0)
+        
+        # Modo: Ver estado de autenticación
+        elif args.auth_status:
+            print("\n" + "="*60)
+            print("AUTHENTICATION STATUS")
+            print("="*60 + "\n")
+            
+            # Verificar configuración
+            config_exists = os.path.exists('.env')
+            token_exists = os.path.exists(config.TOKEN_FILE)
+            
+            print(f"Configuration file (.env): {'✓ Found' if config_exists else '✗ Not found'}")
+            print(f"Token file ({config.TOKEN_FILE}): {'✓ Found' if token_exists else '✗ Not found'}")
+            
+            if not config_exists:
+                print("\n⚠ OAuth2 credentials not configured.")
+                print("   Run: python setup.py")
+                sys.exit(0)
+            
+            if not token_exists:
+                print("\nℹ No active session.")
+                print("   Run: python main.py --login")
+                sys.exit(0)
+            
+            # Importar y verificar autenticación
+            try:
+                from youtube_client import YouTubeClient
+                config.validate_credentials()
+                
+                youtube_client = YouTubeClient()
+                auth_info = youtube_client.get_auth_info()
+                
+                print(f"\nAuthentication Status:")
+                print(f"  Authenticated: {'✓ Yes' if auth_info['authenticated'] else '✗ No'}")
+                print(f"  Token valid: {'✓ Yes' if auth_info['token_valid'] else '✗ No'}")
+                print(f"  Token expired: {'⚠ Yes' if auth_info['token_expired'] else '✓ No'}")
+                print(f"  Refresh token: {'✓ Available' if auth_info['has_refresh_token'] else '✗ Not available'}")
+                
+                if auth_info['authenticated'] and auth_info['token_valid']:
+                    print("\n✓ You are logged in and ready to use YouTube features.")
+                elif auth_info['authenticated'] and auth_info['can_refresh']:
+                    print("\n⚠ Token expired but can be refreshed automatically.")
+                else:
+                    print("\n⚠ Session may need re-authentication.")
+                    print("   Run: python main.py --login")
+                    
+            except Exception as e:
+                print(f"\n✗ Error checking authentication: {str(e)}")
+                print("   You may need to login again: python main.py --login")
+            
+            sys.exit(0)
+        
         # Modo: Reporte de actividad
-        if args.activity_report:
+        elif args.activity_report:
             if MONITORING_AVAILABLE and ActivityMonitor:
                 monitor = ActivityMonitor()
                 monitor.print_report()

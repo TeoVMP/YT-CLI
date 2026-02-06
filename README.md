@@ -127,6 +127,19 @@ python main.py --download-metadata VIDEO_ID
 python main.py --download-metadata VIDEO_ID --metadata-format text
 ```
 
+### Authentication Management
+
+```bash
+# Login / Authenticate
+python main.py --login
+
+# Logout
+python main.py --logout
+
+# Check authentication status
+python main.py --auth-status
+```
+
 ## 🔐 Security
 
 - ✅ Only requests YouTube API access

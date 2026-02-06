@@ -117,6 +117,98 @@ class YouTubeClient:
         except Exception as e:
             raise Exception(f"Error conectando con YouTube API: {e}")
     
+    def logout(self) -> bool:
+        """
+        Cierra sesión revocando el token y eliminando el archivo de token.
+        
+        Returns:
+            bool: True si se cerró sesión exitosamente, False en caso contrario
+        """
+        try:
+            # Intentar revocar el token si existe
+            if self.credentials and self.credentials.token:
+                try:
+                    from google.auth.transport.requests import Request
+                    revoke_url = 'https://oauth2.googleapis.com/revoke'
+                    import requests
+                    requests.post(revoke_url, 
+                                params={'token': self.credentials.token},
+                                headers={'content-type': 'application/x-www-form-urlencoded'})
+                except Exception as e:
+                    print(f"⚠ No se pudo revocar el token en el servidor: {e}")
+                    print("   El token se eliminará localmente de todas formas.")
+            
+            # Eliminar archivo de token local
+            if os.path.exists(config.TOKEN_FILE):
+                os.remove(config.TOKEN_FILE)
+                print(f"✓ Token eliminado: {config.TOKEN_FILE}")
+            
+            # Limpiar credenciales en memoria
+            self.credentials = None
+            self.service = None
+            
+            print("✓ Sesión cerrada exitosamente.")
+            return True
+            
+        except Exception as e:
+            print(f"✗ Error cerrando sesión: {str(e)}")
+            return False
+    
+    def is_authenticated(self) -> bool:
+        """
+        Verifica si hay una sesión activa autenticada.
+        
+        Returns:
+            bool: True si hay una sesión activa, False en caso contrario
+        """
+        if not self.credentials:
+            return False
+        
+        # Verificar si el token es válido
+        if self.credentials.valid:
+            return True
+        
+        # Verificar si se puede refrescar
+        if self.credentials.expired and self.credentials.refresh_token:
+            try:
+                from google.auth.transport.requests import Request
+                self.credentials.refresh(Request())
+                return True
+            except:
+                return False
+        
+        return False
+    
+    def get_auth_info(self) -> dict:
+        """
+        Obtiene información sobre la autenticación actual.
+        
+        Returns:
+            dict: Información de autenticación
+        """
+        info = {
+            'authenticated': False,
+            'token_file': config.TOKEN_FILE,
+            'token_exists': os.path.exists(config.TOKEN_FILE),
+            'has_credentials': self.credentials is not None,
+            'token_valid': False,
+            'token_expired': False,
+            'has_refresh_token': False
+        }
+        
+        if self.credentials:
+            info['authenticated'] = True
+            info['token_valid'] = self.credentials.valid
+            info['token_expired'] = self.credentials.expired
+            info['has_refresh_token'] = self.credentials.refresh_token is not None
+            
+            if self.credentials.expired and self.credentials.refresh_token:
+                info['can_refresh'] = True
+            else:
+                info['can_refresh'] = False
+        
+        return info
+    
     def comment_video(self, video_id: str, comment_text: str) -> dict:
         """
         Publica un comentario en un video de YouTube.
