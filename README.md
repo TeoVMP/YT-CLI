@@ -24,11 +24,12 @@ pip install -r requirements.txt
 **For Termux (Android):**
 See [TERMUX_INSTALL.md](TERMUX_INSTALL.md) for detailed instructions. Quick version:
 ```bash
-pkg install python rust cargo clang make libffi openssl python-dev
+pkg install python rust clang make libffi openssl
 pip install --upgrade pip setuptools wheel
 pip install cryptography
 pip install -r requirements.txt
 ```
+Note: `cargo` comes with `rust`, and Python headers are included with `python`.
 
 ### 2. Configure OAuth2 Credentials
 

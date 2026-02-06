@@ -9,10 +9,9 @@ First, install required system packages in Termux:
 pkg update && pkg upgrade
 
 # Install build tools and dependencies
-pkg install python rust cargo clang make libffi openssl
+pkg install python rust clang make libffi openssl
 
-# Install Python development headers
-pkg install python-dev
+# Note: cargo comes with rust, python-dev headers are included with python
 ```
 
 ## Installation Steps
@@ -52,8 +51,12 @@ pip install google-api-python-client google-auth-httplib2 google-auth-oauthlib p
 If both options fail, build cryptography manually:
 
 ```bash
-# Install Rust and Cargo
-pkg install rust cargo
+# Install Rust (cargo comes with rust)
+pkg install rust
+
+# Verify Rust installation
+rustc --version
+cargo --version
 
 # Set environment variables
 export CARGO_BUILD_TARGET=aarch64-linux-android
@@ -72,12 +75,18 @@ pip install -r requirements.txt
 ### Error: "Rust not found"
 
 ```bash
-# Install Rust
+# Install Rust (cargo comes included)
 pkg install rust
 
 # Verify installation
 rustc --version
 cargo --version
+```
+
+**Note:** If `cargo` command is not found after installing rust, try:
+```bash
+# Add cargo to PATH (usually not needed, but just in case)
+export PATH=$PATH:$HOME/.cargo/bin
 ```
 
 ### Error: "Unsupported platform"
@@ -95,8 +104,9 @@ pip install cryptography
 
 1. **Install all build dependencies:**
    ```bash
-   pkg install python rust cargo clang make libffi openssl python-dev
+   pkg install python rust clang make libffi openssl
    ```
+   Note: `cargo` comes with `rust`, and Python headers are included with `python` package.
 
 2. **Upgrade pip and build tools:**
    ```bash
@@ -161,7 +171,7 @@ Create a file `install-termux.sh`:
 
 echo "Installing system dependencies..."
 pkg update && pkg upgrade -y
-pkg install -y python rust cargo clang make libffi openssl python-dev
+pkg install -y python rust clang make libffi openssl
 
 echo "Upgrading pip..."
 pip install --upgrade pip setuptools wheel
