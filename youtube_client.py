@@ -254,16 +254,9 @@ class YouTubeClient:
             # Limitar max_results a 50 (límite de la API)
             max_results = min(max_results, 50)
             
-            # Si se solicita usar API key y está disponible, usarla (sin autenticación)
-            if use_api_key and config.API_KEY:
-                from googleapiclient.discovery import build
-                service = build(
-                    config.API_SERVICE_NAME,
-                    config.API_VERSION,
-                    developerKey=config.API_KEY
-                )
-            elif config.API_KEY:
-                # Si hay API key disponible, usarla automáticamente para búsqueda
+            # Para búsqueda, usar API key si está disponible (sin autenticación)
+            # Si no hay API key, NO intentar autenticarse (búsqueda no debería requerir login)
+            if config.API_KEY:
                 from googleapiclient.discovery import build
                 service = build(
                     config.API_SERVICE_NAME,
@@ -271,10 +264,13 @@ class YouTubeClient:
                     developerKey=config.API_KEY
                 )
             else:
-                # Si no hay API key, intentar usar OAuth2 (requiere autenticación)
-                if not self.service:
-                    self._authenticate()
-                service = self.service
+                # Sin API key, la búsqueda no puede funcionar sin autenticación
+                # Pero no forzamos autenticación para búsqueda
+                raise Exception(
+                    "API key no configurada. La búsqueda requiere YOUTUBE_API_KEY.\n"
+                    "Agrega YOUTUBE_API_KEY a tu archivo .env\n"
+                    "Obtén una en: https://console.cloud.google.com/apis/credentials"
+                )
             
             # Construir request según el método de autenticación
             if use_api_key and config.API_KEY:
