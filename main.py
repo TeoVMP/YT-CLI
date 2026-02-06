@@ -361,29 +361,31 @@ Ejemplos de uso:
         
         sys.exit(0)
     
-    # Verificar si necesita configuración
-    if not os.path.exists('.env'):
+    # Verificar si necesita configuración (solo para funciones que realmente la requieren)
+    # NO bloquear búsqueda, descarga, info, etc.
+    functions_requiring_auth = [args.stats, args.top_comments, args.export_comments, 
+                                args.comment, args.monitor, args.get_comments,
+                                args.delete_comment, args.my_comments, args.reply,
+                                args.update_comment, args.comment_replies, args.comment_info,
+                                args.download_metadata]
+    
+    if not os.path.exists('.env') and any(functions_requiring_auth):
         print("\n" + "="*70)
         print("⚠ CONFIGURACIÓN REQUERIDA")
         print("="*70)
         print("\nPara usar funciones de comentarios/estadísticas necesitas configurar credenciales.")
         print("\nOpciones:")
         print("1. Ejecuta el script de configuración interactiva:")
-        print("   py setup.py")
+        print("   python setup.py")
         print("\n2. O copia y edita manualmente:")
-        print("   copy env.example .env")
+        print("   cp env.example .env")
         print("   # Luego edita .env con tus credenciales")
-        print("\n3. O usa solo funciones de descarga (no requieren configuración):")
-        print("   py main.py --download-video URL")
-        print("   py main.py --info URL")
+        print("\n3. O usa solo funciones de descarga/búsqueda (no requieren configuración):")
+        print("   python main.py --download-video URL")
+        print("   python main.py --info URL")
+        print("   python main.py --search 'query'")
         print("\n" + "="*70 + "\n")
-        
-        # Si solo está usando funciones que no requieren auth, continuar
-        if not any([args.stats, args.top_comments, args.export_comments, 
-                   args.video_id, args.comment, args.monitor, args.get_comments]):
-            sys.exit(0)
-        else:
-            sys.exit(1)
+        sys.exit(1)
     
     try:
         # Modo: Login/Autenticación
