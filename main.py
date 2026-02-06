@@ -961,14 +961,36 @@ Ejemplos de uso:
                         print("✗ ID de video requerido o URL inválida.")
                         sys.exit(1)
                     
-                    comments = youtube_client.get_comments(video_id)
+                    max_comments_str = input("Número máximo de comentarios a mostrar (default 50): ").strip()
+                    max_comments = int(max_comments_str) if max_comments_str.isdigit() else 50
+                    
+                    print("\n" + "="*60)
+                    print("COMENTARIOS DEL VIDEO")
+                    print("="*60 + "\n")
+                    print(f"📹 Video ID: {video_id}")
+                    print(f"📋 Obteniendo comentarios...")
+                    
+                    comments = youtube_client.get_comments(video_id, max_results=max_comments)
                     if comments:
-                        print(f"\n✓ Encontrados {len(comments)} comentarios:")
-                        for i, comment in enumerate(comments[:10], 1):
-                            print(f"\n{i}. {comment['text'][:50]}...")
-                            print(f"   Autor: {comment['author']}")
-                            print(f"   Likes: {comment['like_count']}")
-                            print(f"   ID: {comment['id']}")
+                        print(f"\n✓ Encontrados {len(comments)} comentarios:\n")
+                        for i, comment in enumerate(comments, 1):
+                            print(f"[{i}] " + "-"*76)
+                            print(f"🆔 ID del Comentario: {comment['id']}")
+                            print(f"👤 Autor: {comment['author']}")
+                            print(f"👍 Likes: {comment['like_count']}")
+                            if comment.get('reply_count', 0) > 0:
+                                print(f"💬 Respuestas: {comment['reply_count']}")
+                            print(f"📅 Fecha: {comment['published_at']}")
+                            if comment.get('author_channel_id'):
+                                print(f"📺 Canal ID: {comment['author_channel_id']}")
+                            print("-"*80)
+                            print(f"{comment['text']}")
+                            print()
+                        
+                        print(f"\n💡 Tip: Usa el ID del comentario para:")
+                        print(f"   Responder: py main.py --reply {comments[0]['id']} --reply-text 'Tu respuesta'")
+                        print(f"   Ver respuestas: py main.py --comment-replies {comments[0]['id']}")
+                        print(f"   Ver info: py main.py --comment-info {comments[0]['id']}")
                     else:
                         print("  No se encontraron comentarios.")
                 
