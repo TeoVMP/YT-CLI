@@ -30,13 +30,21 @@ python setup.py
 
 Or manually: copy `env.example` to `.env` and fill in your credentials.
 
-### 3. Authorize with Your Personal Account
+### 3. Login / Authorize with Your Personal Account
 
+**First time login:**
+```bash
+python main.py --login
+```
+
+Your browser will open automatically. Sign in with your Google account and authorize the application. The token will be saved automatically.
+
+**Or login automatically when using features:**
 ```bash
 python main.py --stats VIDEO_ID
 ```
 
-Your browser will open to authorize with your personal Google account.
+If not logged in, your browser will open automatically for authorization.
 
 ## 📋 Available Commands
 
