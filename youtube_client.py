@@ -974,3 +974,129 @@ class YouTubeClient:
         except Exception as e:
             print(f"✗ Error obteniendo información del comentario: {str(e)}")
             return None
+    
+    def get_my_playlists(self, max_results: int = 50) -> list:
+        """
+        Obtiene las playlists personales del usuario autenticado.
+        
+        Args:
+            max_results: Número máximo de playlists a obtener
+            
+        Returns:
+            list: Lista de playlists personales
+        """
+        if not self.service:
+            raise Exception("Servicio de YouTube no inicializado.")
+        
+        try:
+            playlists = []
+            next_page_token = None
+            
+            while len(playlists) < max_results:
+                request_max = min(50, max_results - len(playlists))
+                
+                request = self.service.playlists().list(
+                    part='snippet,contentDetails',
+                    mine=True,
+                    maxResults=request_max,
+                    pageToken=next_page_token
+                )
+                
+                response = request.execute()
+                
+                for item in response.get('items', []):
+                    snippet = item['snippet']
+                    content_details = item.get('contentDetails', {})
+                    
+                    playlists.append({
+                        'id': item['id'],
+                        'title': snippet.get('title'),
+                        'description': snippet.get('description', ''),
+                        'published_at': snippet.get('publishedAt'),
+                        'thumbnail': snippet.get('thumbnails', {}).get('default', {}).get('url'),
+                        'item_count': content_details.get('itemCount', 0),
+                        'channel_id': snippet.get('channelId'),
+                        'channel_title': snippet.get('channelTitle'),
+                        'privacy_status': snippet.get('privacyStatus', 'private')
+                    })
+                
+                next_page_token = response.get('nextPageToken')
+                if not next_page_token or len(playlists) >= max_results:
+                    break
+            
+            return playlists[:max_results]
+            
+        except HttpError as e:
+            error_details = json.loads(e.content.decode('utf-8'))
+            error_message = error_details.get('error', {}).get('message', 'Error desconocido')
+            print(f"✗ Error obteniendo playlists: {error_message}")
+            return []
+        except Exception as e:
+            print(f"✗ Error obteniendo playlists: {str(e)}")
+            return []
+    
+    def get_playlist_videos(self, playlist_id: str, max_results: int = 50) -> list:
+        """
+        Obtiene los videos de una playlist.
+        
+        Args:
+            playlist_id: ID de la playlist
+            max_results: Número máximo de videos a obtener
+            
+        Returns:
+            list: Lista de videos en la playlist
+        """
+        if not self.service:
+            raise Exception("Servicio de YouTube no inicializado.")
+        
+        try:
+            videos = []
+            next_page_token = None
+            
+            while len(videos) < max_results:
+                request_max = min(50, max_results - len(videos))
+                
+                request = self.service.playlistItems().list(
+                    part='snippet,contentDetails',
+                    playlistId=playlist_id,
+                    maxResults=request_max,
+                    pageToken=next_page_token
+                )
+                
+                response = request.execute()
+                
+                for item in response.get('items', []):
+                    snippet = item['snippet']
+                    content_details = item.get('contentDetails', {})
+                    video_id = content_details.get('videoId')
+                    
+                    if not video_id:
+                        continue
+                    
+                    videos.append({
+                        'playlist_item_id': item['id'],
+                        'video_id': video_id,
+                        'title': snippet.get('title'),
+                        'description': snippet.get('description', ''),
+                        'channel_title': snippet.get('videoOwnerChannelTitle'),
+                        'channel_id': snippet.get('videoOwnerChannelId'),
+                        'published_at': snippet.get('publishedAt'),
+                        'position': snippet.get('position'),
+                        'thumbnail': snippet.get('thumbnails', {}).get('default', {}).get('url'),
+                        'url': f"https://www.youtube.com/watch?v={video_id}"
+                    })
+                
+                next_page_token = response.get('nextPageToken')
+                if not next_page_token or len(videos) >= max_results:
+                    break
+            
+            return videos[:max_results]
+            
+        except HttpError as e:
+            error_details = json.loads(e.content.decode('utf-8'))
+            error_message = error_details.get('error', {}).get('message', 'Error desconocido')
+            print(f"✗ Error obteniendo videos de la playlist: {error_message}")
+            return []
+        except Exception as e:
+            print(f"✗ Error obteniendo videos de la playlist: {str(e)}")
+            return []

@@ -362,6 +362,19 @@ Ejemplos de uso:
         help='Metadata export format (default: json)'
     )
     
+    parser.add_argument(
+        '--list-playlists',
+        action='store_true',
+        help='List your personal YouTube playlists'
+    )
+    
+    parser.add_argument(
+        '--play-playlist',
+        type=str,
+        metavar='PLAYLIST_ID',
+        help='Play a personal YouTube playlist by ID'
+    )
+    
     # --moderate y --monitor ya están definidos arriba, no duplicar
     
     args = parser.parse_args()
@@ -644,6 +657,142 @@ Ejemplos de uso:
             except Exception as e:
                 print(f"\n✗ Error checking authentication: {str(e)}")
                 print("   You may need to login again: python main.py --login")
+            
+            sys.exit(0)
+        
+        # Modo: Listar playlists personales (requiere autenticación)
+        elif args.list_playlists:
+            # Verificar si existe archivo .env
+            if not os.path.exists('.env'):
+                print("\n" + "="*70)
+                print("⚠ CONFIGURACIÓN REQUERIDA")
+                print("="*70)
+                print("\nPara usar esta función necesitas configurar credenciales OAuth2.")
+                print("\n📋 Opciones de configuración:")
+                print("\n1. Configuración interactiva (RECOMENDADO):")
+                print("   py setup.py")
+                print("\n2. Configuración manual:")
+                print("   copy env.example .env")
+                print("   # Luego edita .env con tus credenciales de Google Cloud Console")
+                print("\n📖 Guía completa: Lee QUICK_START.md")
+                print("\n" + "="*70 + "\n")
+                sys.exit(1)
+            
+            # Importar módulos de YouTube API
+            from youtube_client import YouTubeClient
+            
+            # Validar credenciales antes de inicializar cliente
+            try:
+                config.validate_credentials()
+            except ValueError as e:
+                print("\n" + "="*70)
+                print("⚠ ERROR DE CONFIGURACIÓN")
+                print("="*70)
+                print(f"\n{e}")
+                print("\n📋 Solución rápida:")
+                print("   py setup.py")
+                print("\nO edita manualmente el archivo .env con tus credenciales.")
+                print("="*70 + "\n")
+                sys.exit(1)
+            
+            print("\n" + "="*60)
+            print("TUS PLAYLISTS DE YOUTUBE")
+            print("="*60 + "\n")
+            
+            youtube_client = YouTubeClient()
+            playlists = youtube_client.get_my_playlists(max_results=50)
+            
+            if playlists:
+                print(f"✓ Encontradas {len(playlists)} playlists:\n")
+                for i, playlist in enumerate(playlists, 1):
+                    print(f"[{i}] " + "-"*76)
+                    print(f"📋 Título: {playlist['title']}")
+                    print(f"🆔 ID: {playlist['id']}")
+                    print(f"📊 Videos: {playlist['item_count']}")
+                    print(f"🔒 Privacidad: {playlist['privacy_status']}")
+                    print(f"📅 Creada: {playlist['published_at']}")
+                    if playlist.get('description'):
+                        desc = playlist['description'][:100] + "..." if len(playlist['description']) > 100 else playlist['description']
+                        print(f"📝 Descripción: {desc}")
+                    print()
+                
+                print(f"\n💡 Tip: Para reproducir una playlist:")
+                print(f"   python main.py --play-playlist {playlists[0]['id']}")
+            else:
+                print("  No se encontraron playlists.")
+            
+            sys.exit(0)
+        
+        # Modo: Reproducir playlist personal (requiere autenticación)
+        elif args.play_playlist:
+            # Verificar si existe archivo .env
+            if not os.path.exists('.env'):
+                print("\n" + "="*70)
+                print("⚠ CONFIGURACIÓN REQUERIDA")
+                print("="*70)
+                print("\nPara usar esta función necesitas configurar credenciales OAuth2.")
+                print("\n📋 Opciones de configuración:")
+                print("\n1. Configuración interactiva (RECOMENDADO):")
+                print("   py setup.py")
+                print("\n2. Configuración manual:")
+                print("   copy env.example .env")
+                print("   # Luego edita .env con tus credenciales de Google Cloud Console")
+                print("\n📖 Guía completa: Lee QUICK_START.md")
+                print("\n" + "="*70 + "\n")
+                sys.exit(1)
+            
+            # Importar módulos de YouTube API
+            from youtube_client import YouTubeClient
+            from vlc_player import VLCPlayer
+            
+            # Validar credenciales antes de inicializar cliente
+            try:
+                config.validate_credentials()
+            except ValueError as e:
+                print("\n" + "="*70)
+                print("⚠ ERROR DE CONFIGURACIÓN")
+                print("="*70)
+                print(f"\n{e}")
+                print("\n📋 Solución rápida:")
+                print("   py setup.py")
+                print("\nO edita manualmente el archivo .env con tus credenciales.")
+                print("="*70 + "\n")
+                sys.exit(1)
+            
+            print("\n" + "="*60)
+            print("REPRODUCIR PLAYLIST PERSONAL")
+            print("="*60 + "\n")
+            
+            youtube_client = YouTubeClient()
+            player = VLCPlayer()
+            
+            if not player.is_available():
+                print("✗ VLC no está disponible. Instala VLC para reproducir playlists.")
+                sys.exit(1)
+            
+            # Obtener videos de la playlist
+            print(f"📋 Obteniendo videos de la playlist: {args.play_playlist}")
+            videos = youtube_client.get_playlist_videos(args.play_playlist, max_results=100)
+            
+            if not videos:
+                print("✗ No se encontraron videos en la playlist o la playlist no existe.")
+                print("   Verifica que tengas acceso a la playlist y que tenga videos.")
+                sys.exit(1)
+            
+            print(f"✓ Encontrados {len(videos)} videos en la playlist")
+            
+            # Obtener URLs de los videos
+            video_urls = [video['url'] for video in videos]
+            
+            # Reproducir playlist
+            print(f"\n▶ Iniciando reproducción de la playlist...")
+            success = player.play_playlist(video_urls, fullscreen=args.play_fullscreen)
+            
+            if success:
+                print(f"\n✓ Reproducción iniciada. VLC reproducirá {len(video_urls)} videos secuencialmente.")
+            else:
+                print("\n✗ Error iniciando la reproducción.")
+                sys.exit(1)
             
             sys.exit(0)
         
@@ -1258,7 +1407,9 @@ Ejemplos de uso:
                 print("17. Logout")
                 print("18. Check authentication status")
                 print("19. Search YouTube videos")
-                print("20. Exit")
+                print("20. List my playlists")
+                print("21. Play a playlist")
+                print("22. Exit")
                 
                 option = input("\nSelect an option (1-20): ").strip()
                 
@@ -1755,6 +1906,60 @@ Ejemplos de uso:
                         print("   Select option 16 to login.")
                 
                 elif option == '19':
+                    query = input("\nEnter search query: ").strip()
+                    if not query:
+                        print("✗ Search query required.")
+                        sys.exit(1)
+                    
+                    max_results_str = input("Max results (default 10): ").strip()
+                    max_results = int(max_results_str) if max_results_str.isdigit() else 10
+                    
+                    videos = youtube_client.search_videos(query, max_results=max_results)
+                    if videos:
+                        print(f"\n✓ Found {len(videos)} videos:\n")
+                        for i, video in enumerate(videos, 1):
+                            print(f"[{i}] {video['title']}")
+                            print(f"    URL: {video['url']}\n")
+                    else:
+                        print("✗ No videos found.")
+                
+                elif option == '20':
+                    playlists = youtube_client.get_my_playlists(max_results=50)
+                    if playlists:
+                        print(f"\n✓ Found {len(playlists)} playlists:\n")
+                        for i, playlist in enumerate(playlists, 1):
+                            print(f"[{i}] {playlist['title']}")
+                            print(f"    ID: {playlist['id']}")
+                            print(f"    Videos: {playlist['item_count']}\n")
+                    else:
+                        print("  No playlists found.")
+                
+                elif option == '21':
+                    playlist_id = input("\nEnter playlist ID: ").strip()
+                    if not playlist_id:
+                        print("✗ Playlist ID required.")
+                        sys.exit(1)
+                    
+                    from vlc_player import VLCPlayer
+                    player = VLCPlayer()
+                    
+                    if not player.is_available():
+                        print("✗ VLC not available.")
+                        sys.exit(1)
+                    
+                    videos = youtube_client.get_playlist_videos(playlist_id, max_results=100)
+                    if videos:
+                        video_urls = [video['url'] for video in videos]
+                        print(f"\n▶ Playing playlist with {len(video_urls)} videos...")
+                        success = player.play_playlist(video_urls)
+                        if success:
+                            print("✓ Playback started.")
+                        else:
+                            print("✗ Error starting playback.")
+                    else:
+                        print("✗ No videos found in playlist.")
+                
+                elif option == '22':
                     print("Exiting...")
                     sys.exit(0)
                 

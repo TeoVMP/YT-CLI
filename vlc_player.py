@@ -252,6 +252,83 @@ class VLCPlayer:
             print(f"✗ Error iniciando VLC: {e}")
             return False
     
+    def play_playlist(self, video_urls: list, fullscreen: bool = False) -> bool:
+        """
+        Reproduce una lista de videos de YouTube secuencialmente usando VLC.
+        
+        Args:
+            video_urls: Lista de URLs de videos de YouTube
+            fullscreen: Si True, reproduce en pantalla completa
+            
+        Returns:
+            bool: True si se inició la reproducción exitosamente
+        """
+        if not self.is_available():
+            print("✗ VLC no está instalado o no se encuentra en el PATH.")
+            print("\n📥 Instalación de VLC:")
+            print("   Windows: https://www.videolan.org/vlc/download-windows.html")
+            print("   macOS: https://www.videolan.org/vlc/download-macos.html")
+            print("   Linux: sudo apt-get install vlc (Ubuntu/Debian)")
+            return False
+        
+        if not video_urls:
+            print("✗ La lista de videos está vacía.")
+            return False
+        
+        try:
+            print(f"\n📺 Reproduciendo playlist con {len(video_urls)} videos...")
+            
+            # Crear una lista de URLs de streams
+            stream_urls = []
+            for i, url in enumerate(video_urls, 1):
+                print(f"   [{i}/{len(video_urls)}] Obteniendo URL del stream...")
+                stream_url = self._get_youtube_stream_url(url)
+                if stream_url:
+                    stream_urls.append(stream_url)
+                    print(f"   ✓ Video {i} listo")
+                else:
+                    print(f"   ⚠ No se pudo obtener URL del video {i}, se omitirá")
+            
+            if not stream_urls:
+                print("✗ No se pudo obtener ninguna URL de stream válida.")
+                return False
+            
+            print(f"\n▶ Iniciando VLC con {len(stream_urls)} videos...")
+            
+            cmd = [self.vlc_path]
+            
+            # Opciones de VLC
+            if fullscreen:
+                cmd.append('--fullscreen')
+            
+            # Usar interfaz gráfica normal
+            cmd.append('--intf')
+            system = platform.system()
+            if system == 'Darwin':
+                cmd.append('macosx')
+            else:
+                cmd.append('qt')
+            
+            cmd.append('--no-video-title-show')
+            
+            # Agregar todas las URLs de los videos
+            # VLC reproducirá los videos secuencialmente automáticamente
+            cmd.extend(stream_urls)
+            
+            # Ejecutar VLC en segundo plano
+            process = subprocess.Popen(cmd,
+                                     stdout=subprocess.DEVNULL,
+                                     stderr=subprocess.DEVNULL)
+            
+            print("✓ VLC iniciado con interfaz gráfica.")
+            print(f"   Reproduciendo {len(stream_urls)} videos secuencialmente...")
+            print("   Puedes cerrar VLC normalmente desde la ventana o presionando Alt+F4 (Windows) / Cmd+Q (Mac)")
+            return True
+        
+        except Exception as e:
+            print(f"✗ Error iniciando VLC: {e}")
+            return False
+    
     def get_vlc_info(self) -> dict:
         """
         Obtiene información sobre la instalación de VLC.

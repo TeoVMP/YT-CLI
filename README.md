@@ -9,6 +9,7 @@ Complete bot to interact with YouTube: comment, download videos/audio, view stat
 - ✅ **View video statistics**
 - ✅ **Export comments** to text files
 - ✅ **Play videos** automatically with VLC
+- ✅ **Play personal playlists** from your YouTube account
 - ✅ **Security system**: Only YouTube access (no Gmail)
 - ✅ **Configurable rate limiting**
 
@@ -177,6 +178,19 @@ python main.py --search "news" --search-order date
 
 # Search ordered by view count
 python main.py --search "viral" --search-order viewCount
+```
+
+### Playlists
+
+```bash
+# List your personal playlists
+python main.py --list-playlists
+
+# Play a personal playlist by ID
+python main.py --play-playlist PLAYLIST_ID
+
+# Play playlist in fullscreen
+python main.py --play-playlist PLAYLIST_ID --play-fullscreen
 ```
 
 ### Authentication Management
