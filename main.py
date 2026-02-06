@@ -483,7 +483,7 @@ Ejemplos de uso:
             youtube_client = YouTubeClient()
             
             # Modo: Publicar comentario
-        if args.video_id and args.comment:
+            if args.video_id and args.comment:
             print(f"\n📝 Publicando comentario en video: {args.video_id}")
             result = youtube_client.comment_video(args.video_id, args.comment)
             
@@ -498,9 +498,9 @@ Ejemplos de uso:
             else:
                 print(f"\n✗ Error: {result.get('error', 'Error desconocido')}")
                 sys.exit(1)
-        
-        # Modo: Obtener comentarios
-        elif args.video_id and args.get_comments:
+            
+            # Modo: Obtener comentarios
+            elif args.video_id and args.get_comments:
             print(f"\n📋 Obteniendo comentarios del video: {args.video_id}")
             comments = youtube_client.get_comments(args.video_id)
             
@@ -512,179 +512,113 @@ Ejemplos de uso:
                     print(f"   Likes: {comment['like_count']}")
             else:
                 print("  No se encontraron comentarios.")
-        
-        # Modo: Monitoreo continuo
-        elif args.monitor and args.video_id:
+            
+            # Modo: Monitoreo continuo
+            elif args.monitor and args.video_id:
             if not config.MODERATION_ENABLED:
                 print("⚠ Moderación deshabilitada en configuración.")
                 sys.exit(1)
             
             moderator = Moderator(youtube_client)
             moderator.start_monitoring([args.video_id])
-        
-        # Modo interactivo (solo si no se proporcionó ningún argumento)
-        elif not any([args.video_id, args.comment, args.moderate, args.monitor, args.get_comments]):
-            print("\n" + "="*60)
-            print("MODO INTERACTIVO")
-            print("="*60)
-            print("\nOpciones disponibles:")
-            print("1. Comentar en un video")
-            print("2. Descargar video MP4")
-            print("3. Descargar audio MP3")
-            print("4. Ver información de un video")
-            print("5. Obtener comentarios de un video")
             
-            option = input("\nSelecciona una opción (1-5): ").strip()
-            
-            if option == '1':
-                video_id = input("\nIngresa el ID del video: ").strip()
-                if not video_id:
-                    print("✗ ID de video requerido.")
-                    sys.exit(1)
+            # Modo interactivo (solo si no se proporcionó ningún argumento)
+            elif not any([args.video_id, args.comment, args.moderate, args.monitor, args.get_comments]):
+                print("\n" + "="*60)
+                print("MODO INTERACTIVO")
+                print("="*60)
+                print("\nOpciones disponibles:")
+                print("1. Comentar en un video")
+                print("2. Descargar video MP4")
+                print("3. Descargar audio MP3")
+                print("4. Ver información de un video")
+                print("5. Obtener comentarios de un video")
                 
-                comment_text = input("Ingresa el texto del comentario: ").strip()
-                if not comment_text:
-                    print("✗ Texto del comentario requerido.")
-                    sys.exit(1)
+                option = input("\nSelecciona una opción (1-5): ").strip()
                 
-                print(f"\n📝 Publicando comentario...")
-                result = youtube_client.comment_video(video_id, comment_text)
-                
-                if result.get('success'):
-                    print("\n✓ Comentario publicado exitosamente!")
+                if option == '1':
+                    video_id = input("\nIngresa el ID del video: ").strip()
+                    if not video_id:
+                        print("✗ ID de video requerido.")
+                        sys.exit(1)
                     
-                    if config.MODERATION_ENABLED:
-                        moderate = input("\n¿Activar moderación automática? (s/n): ").strip().lower()
-                        if moderate == 's':
-                            moderator = Moderator(youtube_client)
-                            moderator.monitor_video_comments(video_id)
-                else:
-                    print(f"\n✗ Error: {result.get('error', 'Error desconocido')}")
-                    sys.exit(1)
-            
-            elif option == '2':
-                url = input("\nIngresa la URL del video: ").strip()
-                if not url:
-                    print("✗ URL requerida.")
-                    sys.exit(1)
-                
-                print("\n⚠ ADVERTENCIA: Descargar videos puede violar términos de servicio.")
-                downloader = YouTubeDownloader()
-                result = downloader.download_video(url)
-                if result:
-                    print(f"\n✓ Video descargado: {result}")
-            
-            elif option == '3':
-                url = input("\nIngresa la URL del video: ").strip()
-                if not url:
-                    print("✗ URL requerida.")
-                    sys.exit(1)
-                
-                print("\n⚠ ADVERTENCIA: Descargar audio puede violar términos de servicio.")
-                downloader = YouTubeDownloader()
-                result = downloader.download_audio(url)
-                if result:
-                    print(f"\n✓ Audio descargado: {result}")
-            
-            elif option == '4':
-                url = input("\nIngresa la URL del video: ").strip()
-                if not url:
-                    print("✗ URL requerida.")
-                    sys.exit(1)
-                
-                downloader = YouTubeDownloader()
-                info = downloader.get_video_info(url)
-                if info:
-                    print(f"\n📹 Título: {info['title']}")
-                    print(f"👤 Canal: {info['uploader']}")
-                    print(f"⏱️  Duración: {info['duration']} segundos")
-                    print(f"👁️  Vistas: {info['view_count']:,}")
-            
-            elif option == '5':
-                video_id = input("\nIngresa el ID del video: ").strip()
-                if not video_id:
-                    print("✗ ID de video requerido.")
-                    sys.exit(1)
-                
-                from youtube_client import YouTubeClient
-                config.validate_credentials()
-                youtube_client = YouTubeClient()
-                
-                stats = youtube_client.get_video_stats(video_id)
-                if stats:
-                    print(f"\n📹 Título: {stats['title']}")
-                    print(f"👁️  Vistas: {stats['view_count']:,}")
-                    print(f"👍 Likes: {stats['like_count']:,}")
-                    print(f"💬 Comentarios: {stats['comment_count']:,}")
-            
-            elif option == '6':
-                video_id = input("\nIngresa el ID del video: ").strip()
-                if not video_id:
-                    print("✗ ID de video requerido.")
-                    sys.exit(1)
-                
-                from youtube_client import YouTubeClient
-                config.validate_credentials()
-                youtube_client = YouTubeClient()
-                
-                top_comments = youtube_client.get_top_comments(video_id, max_results=10)
-                if top_comments:
-                    print(f"\n✓ Top {len(top_comments)} comentarios destacados:")
-                    for i, comment in enumerate(top_comments, 1):
-                        print(f"\n[{i}] {comment['author']} ({comment['like_count']} likes)")
-                        print(f"    {comment['text'][:100]}...")
-            
-            elif option == '7':
-                video_id = input("\nIngresa el ID del video: ").strip()
-                if not video_id:
-                    print("✗ ID de video requerido.")
-                    sys.exit(1)
-                
-                from youtube_client import YouTubeClient
-                from comment_exporter import CommentExporter
-                config.validate_credentials()
-                youtube_client = YouTubeClient()
-                
-                max_comments = input("Número máximo de comentarios (default: 1000): ").strip()
-                max_comments = int(max_comments) if max_comments.isdigit() else 1000
-                
-                grep_format = input("¿Usar formato grep? (s/n, default: n): ").strip().lower() == 's'
-                
-                stats = youtube_client.get_video_stats(video_id)
-                video_title = stats['title'] if stats else None
-                
-                comments = youtube_client.get_comments(video_id, max_results=max_comments)
-                if comments:
-                    exporter = CommentExporter()
-                    if grep_format:
-                        filepath = exporter.export_to_grep_format(comments, video_id, video_title)
+                    comment_text = input("Ingresa el texto del comentario: ").strip()
+                    if not comment_text:
+                        print("✗ Texto del comentario requerido.")
+                        sys.exit(1)
+                    
+                    print(f"\n📝 Publicando comentario...")
+                    result = youtube_client.comment_video(video_id, comment_text)
+                    
+                    if result.get('success'):
+                        print("\n✓ Comentario publicado exitosamente!")
+                        
+                        if config.MODERATION_ENABLED:
+                            moderate = input("\n¿Activar moderación automática? (s/n): ").strip().lower()
+                            if moderate == 's':
+                                moderator = Moderator(youtube_client)
+                                moderator.monitor_video_comments(video_id)
                     else:
-                        filepath = exporter.export_to_text(comments, video_id, video_title)
-                    print(f"\n✓ Comentarios exportados: {filepath}")
-            
-            elif option == '8':
-                video_id = input("\nIngresa el ID del video: ").strip()
-                if not video_id:
-                    print("✗ ID de video requerido.")
-                    sys.exit(1)
+                        print(f"\n✗ Error: {result.get('error', 'Error desconocido')}")
+                        sys.exit(1)
                 
-                from youtube_client import YouTubeClient
-                config.validate_credentials()
-                youtube_client = YouTubeClient()
+                elif option == '2':
+                    url = input("\nIngresa la URL del video: ").strip()
+                    if not url:
+                        print("✗ URL requerida.")
+                        sys.exit(1)
+                    
+                    print("\n⚠ ADVERTENCIA: Descargar videos puede violar términos de servicio.")
+                    downloader = YouTubeDownloader()
+                    result = downloader.download_video(url)
+                    if result:
+                        print(f"\n✓ Video descargado: {result}")
                 
-                comments = youtube_client.get_comments(video_id)
-                if comments:
-                    print(f"\n✓ Encontrados {len(comments)} comentarios:")
-                    for i, comment in enumerate(comments[:10], 1):
-                        print(f"\n{i}. {comment['text'][:50]}...")
-                        print(f"   Autor: {comment['author']}")
-                        print(f"   Likes: {comment['like_count']}")
+                elif option == '3':
+                    url = input("\nIngresa la URL del video: ").strip()
+                    if not url:
+                        print("✗ URL requerida.")
+                        sys.exit(1)
+                    
+                    print("\n⚠ ADVERTENCIA: Descargar audio puede violar términos de servicio.")
+                    downloader = YouTubeDownloader()
+                    result = downloader.download_audio(url)
+                    if result:
+                        print(f"\n✓ Audio descargado: {result}")
+                
+                elif option == '4':
+                    url = input("\nIngresa la URL del video: ").strip()
+                    if not url:
+                        print("✗ URL requerida.")
+                        sys.exit(1)
+                    
+                    downloader = YouTubeDownloader()
+                    info = downloader.get_video_info(url)
+                    if info:
+                        print(f"\n📹 Título: {info['title']}")
+                        print(f"👤 Canal: {info['uploader']}")
+                        print(f"⏱️  Duración: {info['duration']} segundos")
+                        print(f"👁️  Vistas: {info['view_count']:,}")
+                
+                elif option == '5':
+                    video_id = input("\nIngresa el ID del video: ").strip()
+                    if not video_id:
+                        print("✗ ID de video requerido.")
+                        sys.exit(1)
+                    
+                    comments = youtube_client.get_comments(video_id)
+                    if comments:
+                        print(f"\n✓ Encontrados {len(comments)} comentarios:")
+                        for i, comment in enumerate(comments[:10], 1):
+                            print(f"\n{i}. {comment['text'][:50]}...")
+                            print(f"   Autor: {comment['author']}")
+                            print(f"   Likes: {comment['like_count']}")
+                    else:
+                        print("  No se encontraron comentarios.")
+                
                 else:
-                    print("  No se encontraron comentarios.")
-            
-            else:
-                print("✗ Opción inválida.")
-                sys.exit(1)
+                    print("✗ Opción inválida.")
+                    sys.exit(1)
     
     except KeyboardInterrupt:
         print("\n\n✓ Operación cancelada por el usuario.")
