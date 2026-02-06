@@ -24,6 +24,9 @@ CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
 CLIENT_SECRET = os.getenv('GOOGLE_CLIENT_SECRET')
 REDIRECT_URI = os.getenv('REDIRECT_URI', 'http://localhost:8080')
 
+# API Key (opcional, para funciones de solo lectura como búsqueda)
+API_KEY = os.getenv('YOUTUBE_API_KEY')
+
 # Validar que las credenciales estén configuradas (solo si se necesitan)
 # Las funciones de descarga NO requieren credenciales OAuth2
 def validate_credentials():

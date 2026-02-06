@@ -44,8 +44,18 @@ class VLCPlayer:
             'Linux': [
                 '/usr/bin/vlc',
                 '/usr/local/bin/vlc',
+                '/data/data/org.videolan.vlc/files/bin/vlc',  # Android VLC
+            ],
+            'Android': [  # Termux/Android
+                '/data/data/org.videolan.vlc/files/bin/vlc',
+                '/data/data/org.videolan.vlc/exec/vlc',
+                'vlc',  # Si está en PATH
             ]
         }
+        
+        # Detectar Android/Termux
+        if os.environ.get('TERMUX_VERSION') or os.path.exists('/data/data/com.termux'):
+            system = 'Android'
         
         # Buscar en PATH primero
         try:
@@ -72,7 +82,19 @@ class VLCPlayer:
         Returns:
             bool: True si VLC está disponible
         """
-        return self.vlc_path is not None
+        if self.vlc_path is None:
+            # En Android, verificar si VLC está instalado como app
+            if os.environ.get('TERMUX_VERSION') or os.path.exists('/data/data/com.termux'):
+                # Intentar usar am (Activity Manager) para abrir VLC
+                try:
+                    result = subprocess.run(['am', 'start', '-n', 'org.videolan.vlc/.gui.MainActivity'],
+                                          capture_output=True, timeout=2)
+                    if result.returncode == 0:
+                        return True
+                except:
+                    pass
+            return False
+        return True
     
     def _get_youtube_stream_url(self, youtube_url: str) -> Optional[str]:
         """

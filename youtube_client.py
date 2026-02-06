@@ -229,32 +229,56 @@ class YouTubeClient:
         
         return info
     
-    def search_videos(self, query: str, max_results: int = 10, order: str = 'relevance') -> list:
+    def search_videos(self, query: str, max_results: int = 10, order: str = 'relevance', use_api_key: bool = False) -> list:
         """
         Busca videos de YouTube por palabras clave.
+        Puede usar API key (sin autenticación) o OAuth2.
         
         Args:
             query: Palabras clave para buscar
             max_results: Número máximo de resultados (default: 10, max: 50)
             order: Orden de resultados ('relevance', 'date', 'rating', 'title', 'viewCount')
+            use_api_key: Si True, usa API key en lugar de OAuth2 (no requiere login)
             
         Returns:
             list: Lista de videos encontrados
         """
-        if not self.service:
-            self._authenticate()
-        
         try:
             # Limitar max_results a 50 (límite de la API)
             max_results = min(max_results, 50)
             
-            request = self.service.search().list(
+            # Si se solicita usar API key y está disponible, usarla (sin autenticación)
+            if use_api_key and config.API_KEY:
+                from googleapiclient.discovery import build
+                service = build(
+                    config.API_SERVICE_NAME,
+                    config.API_VERSION,
+                    developerKey=config.API_KEY
+                )
+            else:
+                # Usar OAuth2 (requiere autenticación)
+                if not self.service:
+                    self._authenticate()
+                service = self.service
+            
+            request = service.search().list(
                 part='snippet',
                 q=query,
                 type='video',
                 maxResults=max_results,
                 order=order
             )
+            
+            # Si usamos API key, agregarla al request
+            if use_api_key and config.API_KEY:
+                request = service.search().list(
+                    part='snippet',
+                    q=query,
+                    type='video',
+                    maxResults=max_results,
+                    order=order,
+                    key=config.API_KEY
+                )
             
             response = request.execute()
             
