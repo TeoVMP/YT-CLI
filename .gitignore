@@ -1,0 +1,72 @@
+# Credenciales y tokens - NUNCA subir a GitHub
+.env
+token.json
+token_*.json
+credentials.json
+multi_account_config.json
+*.json
+!package.json
+!ethics_rules.json.example
+!multi_account_config.json.example
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+logs/
+moderation_logs/
+
+# Videos y audios descargados
+downloads/videos/
+downloads/audio/
+*.mp4
+*.mp3
+*.webm
+*.m4a
+*.opus
+
+# Comentarios exportados (opcional - descomenta si quieres ignorarlos)
+# downloads/comments/
+
+# Archivos de ofuscación (contienen mapeos de datos sensibles)
+obfuscation_mapping.json
+account_suggestions.json
+
+# Base de datos
+*.db
+*.sqlite
+*.sqlite3
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,21 @@
+{
+  "ethics_rules": {
+    "banned_words": [
+      "palabra_prohibida_1",
+      "palabra_prohibida_2"
+    ],
+    "banned_patterns": [
+      ".*spam.*",
+      ".*enlace sospechoso.*",
+      ".*http://.*",
+      ".*www\\..*"
+    ],
+    "max_length": 500,
+    "min_length": 10,
+    "require_moderation": false,
+    "auto_delete": true,
+    "notification_on_delete": true,
+    "case_sensitive": false
+  },
+  "description": "Reglas éticas para moderación automática de comentarios. Copia este archivo a ethics_rules.json y personaliza según tus necesidades."
+}

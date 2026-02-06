@@ -1,0 +1,41 @@
+{
+  "accounts": [
+    {
+      "id": "account_1",
+      "client_id": "tu_client_id_cuenta_1",
+      "client_secret": "tu_client_secret_cuenta_1",
+      "token_file": "token_account_1.json",
+      "max_comments_per_day": 50,
+      "max_comments_per_hour": 10,
+      "priority": 1,
+      "description": "Cuenta principal para comentarios"
+    },
+    {
+      "id": "account_2",
+      "client_id": "tu_client_id_cuenta_2",
+      "client_secret": "tu_client_secret_cuenta_2",
+      "token_file": "token_account_2.json",
+      "max_comments_per_day": 50,
+      "max_comments_per_hour": 10,
+      "priority": 2,
+      "description": "Cuenta secundaria para comentarios"
+    },
+    {
+      "id": "account_stats",
+      "client_id": "tu_client_id_cuenta_stats",
+      "client_secret": "tu_client_secret_cuenta_stats",
+      "token_file": "token_account_stats.json",
+      "max_comments_per_day": 0,
+      "max_comments_per_hour": 0,
+      "priority": 3,
+      "description": "Cuenta dedicada para estadísticas y consultas"
+    }
+  ],
+  "load_balancing": {
+    "strategy": "round_robin",
+    "failover_enabled": true,
+    "quota_threshold_warning": 1000,
+    "quota_threshold_critical": 500
+  },
+  "description": "Configuración para múltiples cuentas colectivas. Copia este archivo a multi_account_config.json y completa con tus credenciales."
+}

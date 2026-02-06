@@ -1,0 +1,13 @@
+# YouTube Bot Dependencies
+google-api-python-client>=2.100.0
+google-auth-httplib2>=0.1.1
+google-auth-oauthlib>=1.1.0
+python-dotenv>=1.0.0
+
+# Video Download Dependencies
+yt-dlp>=2023.12.30
+mutagen>=1.47.0  # Para metadata de MP3
+
+# Optional: For advanced content analysis
+# nltk>=3.8.1
+# textblob>=0.17.1
