@@ -97,25 +97,22 @@ class YouTubeClient:
                 
                 if is_termux:
                     print("📱 Detectado Termux (Android)")
-                    print("   Se usará autenticación por consola (sin navegador).\n")
+                    print("   Se usará autenticación manual (sin navegador automático).\n")
                     print("📝 Pasos:")
                     print("   1. Se mostrará una URL - cópiala")
                     print("   2. Ábrela en tu navegador móvil")
                     print("   3. Inicia sesión y autoriza")
-                    print("   4. Copia el código de autorización")
+                    print("   4. Copia el código de autorización de la URL")
                     print("   5. Pégalo aquí\n")
                     print("="*60 + "\n")
-                    # En Termux, usar run_local_server con puerto específico o mostrar URL manualmente
-                    try:
-                        # Intentar usar run_local_server (puede no funcionar en Termux)
-                        creds = flow.run_local_server(port=8080, open_browser=False)
-                    except Exception as e:
-                        # Si falla, mostrar URL para copiar manualmente
-                        auth_url, _ = flow.authorization_url(prompt='consent')
-                        print(f"\n📋 Por favor, visita esta URL en tu navegador:")
-                        print(f"{auth_url}\n")
-                        code = input("Ingresa el código de autorización: ").strip()
-                        creds = flow.fetch_token(code=code)
+                    
+                    # En Termux, mostrar URL manualmente y pedir código
+                    auth_url, _ = flow.authorization_url(prompt='consent')
+                    print(f"\n📋 Por favor, visita esta URL en tu navegador:")
+                    print(f"\n{auth_url}\n")
+                    print("Después de autorizar, copia el código de la URL (el parámetro 'code=...')")
+                    code = input("\nIngresa el código de autorización: ").strip()
+                    creds = flow.fetch_token(code=code)
                 else:
                     print("🌐 Se abrirá tu navegador automáticamente...")
                     print("   Si no se abre, copia la URL que aparecerá.\n")
