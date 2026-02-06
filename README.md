@@ -1,122 +1,146 @@
-# YouTube Bot - Bot para Comentar y Descargar Videos de YouTube
+# YouTube Bot - Comment and Download YouTube Videos
 
-Bot completo para interactuar con YouTube: comentar, descargar videos/audio, ver estadísticas y más.
+Complete bot to interact with YouTube: comment, download videos/audio, view statistics, and more.
 
-## 🎯 Características Principales
+## 🎯 Main Features
 
-- ✅ **Comentar en videos** usando tu cuenta personal de Google
-- ✅ **Descargar videos MP4** y **audio MP3**
-- ✅ **Ver estadísticas** de videos
-- ✅ **Exportar comentarios** a archivos de texto
-- ✅ **Reproducir videos** automáticamente con VLC
-- ✅ **Sistema de protección**: Solo acceso a YouTube (no a Gmail)
-- ✅ **Rate limiting** configurable
+- ✅ **Comment on videos** using your personal Google account
+- ✅ **Download MP4 videos** and **MP3 audio**
+- ✅ **View video statistics**
+- ✅ **Export comments** to text files
+- ✅ **Play videos** automatically with VLC
+- ✅ **Security system**: Only YouTube access (no Gmail)
+- ✅ **Configurable rate limiting**
 
-## 🚀 Inicio Rápido
+## 🚀 Quick Start
 
-### 1. Instalar Dependencias
+### 1. Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2. Configurar Credenciales OAuth2
+### 2. Configure OAuth2 Credentials
 
-**Cada usuario usa su propia cuenta de Google para comentar.**
-
-```bash
-py setup.py
-```
-
-O manualmente: copia `env.example` a `.env` y completa tus credenciales.
-
-### 3. Autorizar con tu Cuenta Personal
+**Each user uses their own Google account to comment.**
 
 ```bash
-py main.py --stats VIDEO_ID
+python setup.py
 ```
 
-Se abrirá el navegador para que autorices con tu cuenta personal de Google.
+Or manually: copy `env.example` to `.env` and fill in your credentials.
 
-## 📋 Comandos Disponibles
-
-### Comentar
+### 3. Authorize with Your Personal Account
 
 ```bash
-# Con URL completa
-py main.py --video-id "https://www.youtube.com/watch?v=VIDEO_ID" --comment "Tu comentario"
-
-# Con solo el ID
-py main.py --video-id VIDEO_ID --comment "Tu comentario"
+python main.py --stats VIDEO_ID
 ```
 
-### Descargar
+Your browser will open to authorize with your personal Google account.
+
+## 📋 Available Commands
+
+### Comment
 
 ```bash
-# Descargar video MP4
-py main.py --download-video "https://www.youtube.com/watch?v=VIDEO_ID"
+# With full URL
+python main.py --video-id "https://www.youtube.com/watch?v=VIDEO_ID" --comment "Your comment"
 
-# Descargar audio MP3
-py main.py --download-audio "https://www.youtube.com/watch?v=VIDEO_ID"
-
-# Descargar ambos
-py main.py --download-both "https://www.youtube.com/watch?v=VIDEO_ID"
+# With just the ID
+python main.py --video-id VIDEO_ID --comment "Your comment"
 ```
 
-### Reproducir con VLC
+### Download
 
 ```bash
-# Reproducir desde URL
-py main.py --play "https://www.youtube.com/watch?v=VIDEO_ID"
+# Download MP4 video
+python main.py --download-video "https://www.youtube.com/watch?v=VIDEO_ID"
 
-# Reproducir archivo local
-py main.py --play "ruta/al/video.mp4"
+# Download MP3 audio
+python main.py --download-audio "https://www.youtube.com/watch?v=VIDEO_ID"
 
-# Pantalla completa
-py main.py --play "URL" --play-fullscreen
-
-# Descargar y reproducir automáticamente
-py main.py --download-and-play "https://www.youtube.com/watch?v=VIDEO_ID"
+# Download both
+python main.py --download-both "https://www.youtube.com/watch?v=VIDEO_ID"
 ```
 
-### Estadísticas y Comentarios
+### Play with VLC
 
 ```bash
-# Ver estadísticas
-py main.py --stats VIDEO_ID
+# Play from URL
+python main.py --play "https://www.youtube.com/watch?v=VIDEO_ID"
 
-# Ver comentarios destacados
-py main.py --top-comments VIDEO_ID
+# Play local file
+python main.py --play "path/to/video.mp4"
 
-# Exportar comentarios
-py main.py --export-comments VIDEO_ID
+# Fullscreen
+python main.py --play "URL" --play-fullscreen
 
-# Exportar en formato grep
-py main.py --export-comments VIDEO_ID --grep-format
+# Download and play automatically
+python main.py --download-and-play "https://www.youtube.com/watch?v=VIDEO_ID"
 ```
 
-## 🔐 Seguridad
+### Statistics and Comments
 
-- ✅ Solo solicita acceso a YouTube API
-- ✅ NO tiene acceso a Gmail/email
-- ✅ Tokens guardados localmente en tu computadora
-- ✅ Cada usuario autoriza con su propia cuenta
+```bash
+# View statistics
+python main.py --stats VIDEO_ID
 
-## 📖 Documentación
+# View top comments
+python main.py --top-comments VIDEO_ID
 
-- `QUICK_START.md` - Guía de inicio rápido
-- `PRUEBA_COMENTAR.md` - Cómo probar la funcionalidad de comentar
-- `GUIA_GOOGLE_CLOUD_NUEVA_INTERFAZ.md` - Configurar Google Cloud Console
-- `SOLUCION_ERROR_403.md` - Solucionar error 403
-- `MULTI_ACCOUNT.md` - Sistema multi-cuenta (opcional)
+# Export comments
+python main.py --export-comments VIDEO_ID
 
-## ⚙️ Configuración
+# Export in grep format
+python main.py --export-comments VIDEO_ID --grep-format
+```
 
-### Archivo `.env`
+### Comment Management
+
+```bash
+# List your comments
+python main.py --my-comments VIDEO_ID
+
+# Delete a comment
+python main.py --delete-comment COMMENT_ID
+
+# Reply to a comment
+python main.py --reply COMMENT_ID --reply-text "Your reply"
+
+# Update a comment
+python main.py --update-comment COMMENT_ID --new-text "New text"
+
+# View comment replies
+python main.py --comment-replies COMMENT_ID
+
+# View comment info
+python main.py --comment-info COMMENT_ID
+```
+
+### Download Metadata
+
+```bash
+# Download metadata (JSON)
+python main.py --download-metadata VIDEO_ID
+
+# Download metadata (text)
+python main.py --download-metadata VIDEO_ID --metadata-format text
+```
+
+## 🔐 Security
+
+- ✅ Only requests YouTube API access
+- ✅ NO access to Gmail/email
+- ✅ Tokens stored locally on your computer
+- ✅ Each user authorizes with their own account
+
+## ⚙️ Configuration
+
+### `.env` File
 
 ```env
-GOOGLE_CLIENT_ID=tu_client_id
-GOOGLE_CLIENT_SECRET=tu_client_secret
+GOOGLE_CLIENT_ID=your_client_id
+GOOGLE_CLIENT_SECRET=your_client_secret
 REDIRECT_URI=http://localhost:8080
 
 # Rate limiting
@@ -124,48 +148,47 @@ MAX_COMMENTS_PER_DAY=50
 MAX_COMMENTS_PER_HOUR=10
 ```
 
-### Obtener Credenciales OAuth2
+### Get OAuth2 Credentials
 
-1. Ve a [Google Cloud Console](https://console.cloud.google.com/)
-2. Crea un proyecto
-3. Habilita "YouTube Data API v3"
-4. Configura OAuth Consent Screen:
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a project
+3. Enable "YouTube Data API v3"
+4. Configure OAuth Consent Screen:
    - User Type: External
-   - Scopes: SOLO `youtube.force-ssl`
-   - Agrega tu email como Test User
-5. Crea credenciales OAuth2:
+   - Scopes: ONLY `youtube.force-ssl`
+   - Add your email as Test User
+5. Create OAuth2 credentials:
    - Application type: Desktop app
-6. Copia Client ID y Client Secret
+6. Copy Client ID and Client Secret
 
-## 🎮 Modo Interactivo
+## 🎮 Interactive Mode
 
 ```bash
-py main.py
+python main.py
 ```
 
-Menú interactivo con todas las opciones disponibles.
+Interactive menu with all available options.
 
-## 📝 Notas Importantes
+## 📝 Important Notes
 
-- **Cada usuario usa su propia cuenta**: No necesitas cuentas colectivas
-- **Primera autorización**: Se abre el navegador una vez
-- **Límites**: 50 comentarios/día, 10/hora (configurable)
-- **Tokens**: Se guardan en `token.json` (no subir a GitHub)
+- **Each user uses their own account**: You don't need collective accounts
+- **First authorization**: Browser opens once
+- **Limits**: 50 comments/day, 10/hour (configurable)
+- **Tokens**: Stored in `token.json` (don't upload to GitHub)
 
 ## 🐛 Troubleshooting
 
 ### Error 403: access_denied
-- Agrega tu email como Test User en OAuth Consent Screen
-- Lee `SOLUCION_ERROR_403.md`
+- Add your email as Test User in OAuth Consent Screen
 
-### VLC no se abre
-- Instala VLC desde https://www.videolan.org/vlc/
-- Verifica que esté en el PATH
+### VLC doesn't open
+- Install VLC from https://www.videolan.org/vlc/
+- Verify it's in your PATH
 
-### Error de credenciales
-- Verifica que `.env` tenga las credenciales correctas
-- Ejecuta `py setup.py` para reconfigurar
+### Credentials error
+- Verify that `.env` has correct credentials
+- Run `python setup.py` to reconfigure
 
-## 📄 Licencia
+## 📄 License
 
-Este proyecto es de código abierto. Úsalo responsablemente y respeta los términos de servicio de YouTube.
+This project is open source. Use responsibly and respect YouTube's Terms of Service.
