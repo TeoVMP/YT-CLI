@@ -288,27 +288,7 @@ Ejemplos de uso:
         help='Order of search results (default: relevance)'
     )
     
-    # Comment management arguments
-    parser.add_argument(
-        '--video-id',
-        type=str,
-        metavar='VIDEO_ID',
-        help='Video ID or URL for commenting'
-    )
-    
-    parser.add_argument(
-        '--comment',
-        type=str,
-        metavar='TEXT',
-        help='Comment text to post on video'
-    )
-    
-    parser.add_argument(
-        '--get-comments',
-        action='store_true',
-        help='Get comments from a video'
-    )
-    
+    # Comment management arguments (solo los que no están duplicados)
     parser.add_argument(
         '--delete-comment',
         type=str,
@@ -382,17 +362,7 @@ Ejemplos de uso:
         help='Metadata export format (default: json)'
     )
     
-    parser.add_argument(
-        '--moderate',
-        action='store_true',
-        help='Enable comment moderation'
-    )
-    
-    parser.add_argument(
-        '--monitor',
-        action='store_true',
-        help='Monitor comments continuously'
-    )
+    # --moderate y --monitor ya están definidos arriba, no duplicar
     
     args = parser.parse_args()
     
