@@ -288,6 +288,112 @@ Ejemplos de uso:
         help='Order of search results (default: relevance)'
     )
     
+    # Comment management arguments
+    parser.add_argument(
+        '--video-id',
+        type=str,
+        metavar='VIDEO_ID',
+        help='Video ID or URL for commenting'
+    )
+    
+    parser.add_argument(
+        '--comment',
+        type=str,
+        metavar='TEXT',
+        help='Comment text to post on video'
+    )
+    
+    parser.add_argument(
+        '--get-comments',
+        action='store_true',
+        help='Get comments from a video'
+    )
+    
+    parser.add_argument(
+        '--delete-comment',
+        type=str,
+        metavar='COMMENT_ID',
+        help='Delete a comment by ID'
+    )
+    
+    parser.add_argument(
+        '--my-comments',
+        type=str,
+        nargs='?',
+        const='all',
+        metavar='VIDEO_ID',
+        help='List your comments (optionally for a specific video)'
+    )
+    
+    parser.add_argument(
+        '--reply',
+        type=str,
+        metavar='COMMENT_ID',
+        help='Reply to a comment'
+    )
+    
+    parser.add_argument(
+        '--reply-text',
+        type=str,
+        metavar='TEXT',
+        help='Reply text (use with --reply)'
+    )
+    
+    parser.add_argument(
+        '--update-comment',
+        type=str,
+        metavar='COMMENT_ID',
+        help='Update a comment'
+    )
+    
+    parser.add_argument(
+        '--new-text',
+        type=str,
+        metavar='TEXT',
+        help='New comment text (use with --update-comment)'
+    )
+    
+    parser.add_argument(
+        '--comment-replies',
+        type=str,
+        metavar='COMMENT_ID',
+        help='Get replies to a comment'
+    )
+    
+    parser.add_argument(
+        '--comment-info',
+        type=str,
+        metavar='COMMENT_ID',
+        help='Get information about a comment'
+    )
+    
+    parser.add_argument(
+        '--download-metadata',
+        type=str,
+        metavar='VIDEO_ID',
+        help='Download video metadata'
+    )
+    
+    parser.add_argument(
+        '--metadata-format',
+        type=str,
+        default='json',
+        choices=['json', 'text'],
+        help='Metadata export format (default: json)'
+    )
+    
+    parser.add_argument(
+        '--moderate',
+        action='store_true',
+        help='Enable comment moderation'
+    )
+    
+    parser.add_argument(
+        '--monitor',
+        action='store_true',
+        help='Monitor comments continuously'
+    )
+    
     args = parser.parse_args()
     
     # Modo: Generar nombres de cuenta
@@ -882,9 +988,16 @@ Ejemplos de uso:
         
         # Modos que requieren autenticación OAuth2 (comentarios y gestión de comentarios)
         # Solo se autentica cuando realmente se necesita
-        elif any([args.comment, args.delete_comment, args.my_comments, args.reply, 
-                  args.update_comment, args.comment_replies, args.comment_info, args.monitor]) or \
-             (args.video_id and args.comment) or (args.get_comments and args.video_id):
+        elif any([
+            args.comment,
+            getattr(args, 'delete_comment', None),
+            getattr(args, 'my_comments', None),
+            getattr(args, 'reply', None),
+            getattr(args, 'update_comment', None),
+            getattr(args, 'comment_replies', None),
+            getattr(args, 'comment_info', None),
+            args.monitor
+        ]) or (args.video_id and args.comment) or (args.get_comments and args.video_id):
             # Verificar si existe archivo .env
             if not os.path.exists('.env'):
                 print("\n" + "="*70)
