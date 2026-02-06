@@ -6,6 +6,7 @@ import os
 import subprocess
 import platform
 from typing import Optional
+import yt_dlp
 import config
 
 
@@ -73,9 +74,45 @@ class VLCPlayer:
         """
         return self.vlc_path is not None
     
+    def _get_youtube_stream_url(self, youtube_url: str) -> Optional[str]:
+        """
+        Obtiene la URL del stream real de YouTube usando yt-dlp.
+        
+        Args:
+            youtube_url: URL del video de YouTube
+            
+        Returns:
+            str: URL del stream real o None si hay error
+        """
+        try:
+            ydl_opts = {
+                'format': 'best[ext=mp4]/best',  # Preferir MP4
+                'quiet': True,
+                'no_warnings': True,
+            }
+            
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(youtube_url, download=False)
+                
+                # Obtener la URL del formato mejor disponible
+                if 'url' in info:
+                    return info['url']
+                elif 'formats' in info and info['formats']:
+                    # Buscar el mejor formato disponible
+                    for format_info in info['formats']:
+                        if format_info.get('vcodec') != 'none' and format_info.get('url'):
+                            return format_info['url']
+            
+            return None
+        
+        except Exception as e:
+            print(f"⚠ Error obteniendo URL del stream: {e}")
+            return None
+    
     def play_youtube_url(self, youtube_url: str, fullscreen: bool = False) -> bool:
         """
         Reproduce un video de YouTube directamente usando VLC.
+        Obtiene la URL del stream real usando yt-dlp.
         
         Args:
             youtube_url: URL del video de YouTube
@@ -93,25 +130,42 @@ class VLCPlayer:
             return False
         
         try:
+            print(f"\n📺 Obteniendo URL del stream de YouTube...")
+            print(f"   URL: {youtube_url}")
+            
+            # Obtener URL del stream real
+            stream_url = self._get_youtube_stream_url(youtube_url)
+            
+            if not stream_url:
+                print("✗ No se pudo obtener la URL del stream.")
+                print("   Intenta descargar el video primero con --download-and-play")
+                return False
+            
+            print("✓ URL del stream obtenida.")
+            print(f"\n▶ Iniciando VLC...")
+            
             cmd = [self.vlc_path]
             
             # Opciones de VLC
             if fullscreen:
                 cmd.append('--fullscreen')
             
-            # Reproducir directamente desde URL
-            cmd.append('--play-and-exit')  # Cerrar VLC cuando termine
-            cmd.append(youtube_url)
+            # NO usar --play-and-exit para evitar que se cierre inmediatamente
+            # En su lugar, usar opciones más estables
+            cmd.append('--intf')
+            cmd.append('dummy')  # Interfaz dummy para evitar problemas
+            cmd.append('--no-video-title-show')  # No mostrar título del video
             
-            print(f"\n▶ Reproduciendo video con VLC...")
-            print(f"   URL: {youtube_url}")
+            # Agregar la URL del stream
+            cmd.append(stream_url)
             
             # Ejecutar VLC en segundo plano
-            subprocess.Popen(cmd, 
-                           stdout=subprocess.DEVNULL, 
-                           stderr=subprocess.DEVNULL)
+            process = subprocess.Popen(cmd,
+                                     stdout=subprocess.DEVNULL,
+                                     stderr=subprocess.DEVNULL)
             
             print("✓ VLC iniciado. El video debería comenzar a reproducirse.")
+            print("   Nota: VLC se cerrará cuando termine el video o lo detengas manualmente.")
             return True
         
         except Exception as e:
