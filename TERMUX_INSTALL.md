@@ -1,6 +1,26 @@
 # 📱 Installation Guide for Termux (Android)
 
-## Prerequisites
+## 🚀 Quick Install (Recommended)
+
+The easiest way to install on Termux:
+
+```bash
+# Make script executable
+chmod +x install-termux.sh
+
+# Run installation script
+./install-termux.sh
+```
+
+This script will:
+1. Install all system dependencies
+2. Install cryptography from Termux packages (pre-built, no compilation needed)
+3. Install all Python dependencies
+4. Verify the installation
+
+## Manual Installation
+
+### Prerequisites
 
 First, install required system packages in Termux:
 
@@ -14,9 +34,7 @@ pkg install python rust clang make libffi openssl
 # Note: cargo comes with rust, python-dev headers are included with python
 ```
 
-## Installation Steps
-
-### Option 1: Install with pre-built wheels (Recommended)
+### Option 1: Use Termux packages for cryptography (Recommended)
 
 ```bash
 # Create virtual environment
