@@ -156,10 +156,12 @@ MAX_COMMENTS_PER_HOUR=10
 4. Configure OAuth Consent Screen:
    - User Type: External
    - Scopes: ONLY `youtube.force-ssl`
-   - Add your email as Test User
+   - **Publish your app** to allow anyone to use it (no verification needed for this scope)
 5. Create OAuth2 credentials:
    - Application type: Desktop app
 6. Copy Client ID and Client Secret
+
+**Note:** To allow anyone to use your app without adding them as test users, click "PUBLISH APP" in OAuth Consent Screen. Since `youtube.force-ssl` is a non-sensitive scope, no verification is required.
 
 ## 🎮 Interactive Mode
 
