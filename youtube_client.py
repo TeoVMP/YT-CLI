@@ -105,7 +105,17 @@ class YouTubeClient:
                     print("   4. Copia el código de autorización")
                     print("   5. Pégalo aquí\n")
                     print("="*60 + "\n")
-                    creds = flow.run_console()
+                    # En Termux, usar run_local_server con puerto específico o mostrar URL manualmente
+                    try:
+                        # Intentar usar run_local_server (puede no funcionar en Termux)
+                        creds = flow.run_local_server(port=8080, open_browser=False)
+                    except Exception as e:
+                        # Si falla, mostrar URL para copiar manualmente
+                        auth_url, _ = flow.authorization_url(prompt='consent')
+                        print(f"\n📋 Por favor, visita esta URL en tu navegador:")
+                        print(f"{auth_url}\n")
+                        code = input("Ingresa el código de autorización: ").strip()
+                        creds = flow.fetch_token(code=code)
                 else:
                     print("🌐 Se abrirá tu navegador automáticamente...")
                     print("   Si no se abre, copia la URL que aparecerá.\n")
@@ -255,8 +265,16 @@ class YouTubeClient:
                     config.API_VERSION,
                     developerKey=config.API_KEY
                 )
+            elif config.API_KEY:
+                # Si hay API key disponible, usarla automáticamente para búsqueda
+                from googleapiclient.discovery import build
+                service = build(
+                    config.API_SERVICE_NAME,
+                    config.API_VERSION,
+                    developerKey=config.API_KEY
+                )
             else:
-                # Usar OAuth2 (requiere autenticación)
+                # Si no hay API key, intentar usar OAuth2 (requiere autenticación)
                 if not self.service:
                     self._authenticate()
                 service = self.service

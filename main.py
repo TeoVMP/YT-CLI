@@ -662,26 +662,19 @@ Ejemplos de uso:
             from youtube_client import YouTubeClient
             
             use_api_key = False
+            youtube_client = YouTubeClient(auto_authenticate=False)
+            
             if config.API_KEY:
                 print("ℹ Using API key (no login required)")
                 use_api_key = True
-                youtube_client = YouTubeClient(auto_authenticate=False)
-            elif os.path.exists('.env'):
-                # Si hay credenciales OAuth2, usarlas (requiere login)
-                try:
-                    config.validate_credentials()
-                    print("ℹ Using OAuth2 (login may be required)")
-                    youtube_client = YouTubeClient()
-                except ValueError:
-                    print("⚠ No OAuth2 credentials found. Searching without authentication...")
-                    print("   Note: Some features may be limited without API key or OAuth2")
-                    use_api_key = False
-                    youtube_client = YouTubeClient(auto_authenticate=False)
             else:
-                print("ℹ No credentials configured. Searching without authentication...")
-                print("   Note: For better results, configure YOUTUBE_API_KEY in .env")
+                print("⚠ No API key configured.")
+                print("   Searching requires either:")
+                print("   1. YOUTUBE_API_KEY in .env (recommended, no login needed)")
+                print("   2. OAuth2 credentials (requires login)")
+                print("\n   For now, trying without authentication (may fail)...")
+                print("   To fix: Add YOUTUBE_API_KEY to .env file")
                 use_api_key = False
-                youtube_client = YouTubeClient(auto_authenticate=False)
             
             videos = youtube_client.search_videos(
                 query=args.search,
