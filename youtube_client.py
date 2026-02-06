@@ -30,7 +30,7 @@ class YouTubeClient:
     Los scopes están limitados a youtube.force-ssl únicamente.
     """
     
-    def __init__(self):
+    def __init__(self, auto_authenticate=True):
         self.service = None
         self.credentials = None
         # Inicializar protección si está disponible
@@ -38,7 +38,8 @@ class YouTubeClient:
             self.protection = AccountProtection()
         else:
             self.protection = None
-        self._authenticate()
+        if auto_authenticate:
+            self._authenticate()
     
     def _authenticate(self):
         """
@@ -214,6 +215,62 @@ class YouTubeClient:
                 info['can_refresh'] = False
         
         return info
+    
+    def search_videos(self, query: str, max_results: int = 10, order: str = 'relevance') -> list:
+        """
+        Busca videos de YouTube por palabras clave.
+        
+        Args:
+            query: Palabras clave para buscar
+            max_results: Número máximo de resultados (default: 10, max: 50)
+            order: Orden de resultados ('relevance', 'date', 'rating', 'title', 'viewCount')
+            
+        Returns:
+            list: Lista de videos encontrados
+        """
+        if not self.service:
+            self._authenticate()
+        
+        try:
+            # Limitar max_results a 50 (límite de la API)
+            max_results = min(max_results, 50)
+            
+            request = self.service.search().list(
+                part='snippet',
+                q=query,
+                type='video',
+                maxResults=max_results,
+                order=order
+            )
+            
+            response = request.execute()
+            
+            videos = []
+            for item in response.get('items', []):
+                video_id = item['id']['videoId']
+                snippet = item['snippet']
+                
+                videos.append({
+                    'video_id': video_id,
+                    'title': snippet.get('title'),
+                    'description': snippet.get('description', '')[:200],  # Primeros 200 caracteres
+                    'channel_title': snippet.get('channelTitle'),
+                    'channel_id': snippet.get('channelId'),
+                    'published_at': snippet.get('publishedAt'),
+                    'thumbnail': snippet.get('thumbnails', {}).get('default', {}).get('url'),
+                    'url': f"https://www.youtube.com/watch?v={video_id}"
+                })
+            
+            return videos
+            
+        except HttpError as e:
+            error_details = json.loads(e.content.decode('utf-8'))
+            error_message = error_details.get('error', {}).get('message', 'Error desconocido')
+            print(f"✗ Error buscando videos: {error_message}")
+            return []
+        except Exception as e:
+            print(f"✗ Error buscando videos: {str(e)}")
+            return []
     
     def comment_video(self, video_id: str, comment_text: str) -> dict:
         """

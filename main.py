@@ -266,6 +266,28 @@ Ejemplos de uso:
         help='Check authentication status'
     )
     
+    parser.add_argument(
+        '--search',
+        type=str,
+        metavar='QUERY',
+        help='Search YouTube videos by keywords'
+    )
+    
+    parser.add_argument(
+        '--search-max',
+        type=int,
+        default=10,
+        help='Maximum number of search results (default: 10, max: 50)'
+    )
+    
+    parser.add_argument(
+        '--search-order',
+        type=str,
+        default='relevance',
+        choices=['relevance', 'date', 'rating', 'title', 'viewCount'],
+        help='Order of search results (default: relevance)'
+    )
+    
     args = parser.parse_args()
     
     # Modo: Generar nombres de cuenta
@@ -1093,9 +1115,10 @@ Ejemplos de uso:
                 print("16. Login / Authenticate")
                 print("17. Logout")
                 print("18. Check authentication status")
-                print("19. Exit")
+                print("19. Search YouTube videos")
+                print("20. Exit")
                 
-                option = input("\nSelect an option (1-19): ").strip()
+                option = input("\nSelect an option (1-20): ").strip()
                 
                 if option == '1':
                     video_id = input("\nIngresa el ID del video: ").strip()

@@ -135,6 +135,22 @@ python main.py --download-metadata VIDEO_ID
 python main.py --download-metadata VIDEO_ID --metadata-format text
 ```
 
+### Search Videos
+
+```bash
+# Search videos by keywords
+python main.py --search "python tutorial"
+
+# Search with more results
+python main.py --search "music" --search-max 20
+
+# Search ordered by date
+python main.py --search "news" --search-order date
+
+# Search ordered by view count
+python main.py --search "viral" --search-order viewCount
+```
+
 ### Authentication Management
 
 ```bash
