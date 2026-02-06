@@ -1069,11 +1069,14 @@ Ejemplos de uso:
                 print("11. Eliminar un comentario")
                 print("12. Responder a un comentario")
                 print("13. Actualizar un comentario")
-                print("14. Ver respuestas de un comentario")
-                print("15. Ver información de un comentario")
-                print("16. Salir")
+                print("14. View comment replies")
+                print("15. View comment information")
+                print("16. Login / Authenticate")
+                print("17. Logout")
+                print("18. Check authentication status")
+                print("19. Exit")
                 
-                option = input("\nSelecciona una opción (1-15): ").strip()
+                option = input("\nSelect an option (1-19): ").strip()
                 
                 if option == '1':
                     video_id = input("\nIngresa el ID del video: ").strip()
