@@ -23,7 +23,7 @@ pkg install python rust clang make libffi openssl
 python -m venv venv
 source venv/bin/activate
 
-# Upgrade pip and setuptools
+# Upgrade pip and setuptools (use 'pip', not 'python')
 pip install --upgrade pip setuptools wheel
 
 # Install cryptography first (may have pre-built wheels)
