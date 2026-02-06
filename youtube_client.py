@@ -130,13 +130,19 @@ class YouTubeClient:
                 try:
                     from google.auth.transport.requests import Request
                     revoke_url = 'https://oauth2.googleapis.com/revoke'
-                    import requests
-                    requests.post(revoke_url, 
-                                params={'token': self.credentials.token},
-                                headers={'content-type': 'application/x-www-form-urlencoded'})
+                    # Usar httplib2 que ya está disponible en las dependencias
+                    import httplib2
+                    http = httplib2.Http()
+                    response, content = http.request(
+                        revoke_url + '?token=' + self.credentials.token,
+                        'POST',
+                        headers={'content-type': 'application/x-www-form-urlencoded'}
+                    )
+                    if response.status == 200:
+                        print("✓ Token revoked on server.")
                 except Exception as e:
-                    print(f"⚠ No se pudo revocar el token en el servidor: {e}")
-                    print("   El token se eliminará localmente de todas formas.")
+                    print(f"⚠ Could not revoke token on server: {e}")
+                    print("   Token will be deleted locally anyway.")
             
             # Eliminar archivo de token local
             if os.path.exists(config.TOKEN_FILE):
