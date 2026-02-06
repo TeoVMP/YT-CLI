@@ -247,6 +247,25 @@ Ejemplos de uso:
         help='Descargar video y reproducirlo automáticamente con VLC'
     )
     
+    # Authentication management
+    parser.add_argument(
+        '--login',
+        action='store_true',
+        help='Login/authenticate with your Google account'
+    )
+    
+    parser.add_argument(
+        '--logout',
+        action='store_true',
+        help='Logout and revoke current session'
+    )
+    
+    parser.add_argument(
+        '--auth-status',
+        action='store_true',
+        help='Check authentication status'
+    )
+    
     args = parser.parse_args()
     
     # Modo: Generar nombres de cuenta
