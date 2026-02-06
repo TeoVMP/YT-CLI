@@ -563,6 +563,80 @@ Ejemplos de uso:
             
             sys.exit(0)
         
+        # Modo: Buscar videos
+        elif args.search:
+            # Verificar si existe archivo .env
+            if not os.path.exists('.env'):
+                print("\n" + "="*70)
+                print("⚠ CONFIGURATION REQUIRED")
+                print("="*70)
+                print("\nYou need to configure OAuth2 credentials to search videos.")
+                print("\nOptions:")
+                print("1. Run the interactive setup script:")
+                print("   python setup.py")
+                print("\n2. Or copy and edit manually:")
+                print("   copy env.example .env")
+                print("\n" + "="*70 + "\n")
+                sys.exit(1)
+            
+            # Importar módulos de YouTube API
+            from youtube_client import YouTubeClient
+            
+            # Validar credenciales antes de inicializar cliente
+            try:
+                config.validate_credentials()
+            except ValueError as e:
+                print("\n" + "="*70)
+                print("⚠ CONFIGURATION ERROR")
+                print("="*70)
+                print(f"\n{e}")
+                print("\n📋 Quick fix:")
+                print("   python setup.py")
+                print("\nOr edit the .env file manually with your credentials.")
+                print("="*70 + "\n")
+                sys.exit(1)
+            
+            print("\n" + "="*60)
+            print("SEARCH YOUTUBE VIDEOS")
+            print("="*60 + "\n")
+            
+            print(f"🔍 Searching for: '{args.search}'")
+            print(f"📊 Max results: {args.search_max}")
+            print(f"📋 Order: {args.search_order}")
+            print()
+            
+            youtube_client = YouTubeClient()
+            
+            videos = youtube_client.search_videos(
+                query=args.search,
+                max_results=args.search_max,
+                order=args.search_order
+            )
+            
+            if videos:
+                print(f"✓ Found {len(videos)} videos:\n")
+                for i, video in enumerate(videos, 1):
+                    print(f"[{i}] " + "-"*76)
+                    print(f"📹 Title: {video['title']}")
+                    print(f"👤 Channel: {video['channel_title']}")
+                    print(f"🆔 Video ID: {video['video_id']}")
+                    print(f"📅 Published: {video['published_at']}")
+                    print(f"🔗 URL: {video['url']}")
+                    if video.get('description'):
+                        desc = video['description'][:100] + "..." if len(video['description']) > 100 else video['description']
+                        print(f"📝 Description: {desc}")
+                    print()
+                
+                print(f"\n💡 Tip: Use the Video ID or URL to:")
+                print(f"   View stats: python main.py --stats {videos[0]['video_id']}")
+                print(f"   Download: python main.py --download-video {videos[0]['url']}")
+                print(f"   Comment: python main.py --video-id {videos[0]['video_id']} --comment 'Your comment'")
+            else:
+                print("✗ No videos found for your search query.")
+                sys.exit(1)
+            
+            sys.exit(0)
+        
         # Modo: Reporte de actividad
         elif args.activity_report:
             if MONITORING_AVAILABLE and ActivityMonitor:
@@ -1089,10 +1163,14 @@ Ejemplos de uso:
                 moderator.start_monitoring([video_id])
             
             # Modo interactivo (solo si no se proporcionó ningún argumento)
-            elif not any([args.video_id, args.comment, args.moderate, args.monitor, args.get_comments,
-                          args.delete_comment, args.my_comments, args.reply, args.update_comment,
-                          args.comment_replies, args.comment_info, args.stats, args.top_comments,
-                          args.export_comments]):
+            elif not any([getattr(args, 'video_id', None), getattr(args, 'comment', None), 
+                          getattr(args, 'moderate', None), getattr(args, 'monitor', None), 
+                          getattr(args, 'get_comments', None), getattr(args, 'delete_comment', None),
+                          getattr(args, 'my_comments', None), getattr(args, 'reply', None),
+                          getattr(args, 'update_comment', None), getattr(args, 'comment_replies', None),
+                          getattr(args, 'comment_info', None), getattr(args, 'stats', None),
+                          getattr(args, 'top_comments', None), getattr(args, 'export_comments', None),
+                          getattr(args, 'search', None), getattr(args, 'download_metadata', None)]):
                 print("\n" + "="*60)
                 print("MODO INTERACTIVO")
                 print("="*60)
