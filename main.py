@@ -658,29 +658,29 @@ Ejemplos de uso:
             print(f"📋 Order: {args.search_order}")
             print()
             
-            # Intentar usar API key primero (sin autenticación)
+            # La búsqueda requiere API key (no requiere login)
             from youtube_client import YouTubeClient
             
-            use_api_key = False
-            youtube_client = YouTubeClient(auto_authenticate=False)
+            if not config.API_KEY:
+                print("✗ API key no configurada.")
+                print("\n   La búsqueda requiere YOUTUBE_API_KEY (no requiere login).")
+                print("\n   Para configurar:")
+                print("   1. Ve a: https://console.cloud.google.com/apis/credentials")
+                print("   2. Crea una API key (no OAuth2)")
+                print("   3. Agrega a .env: YOUTUBE_API_KEY=tu_api_key")
+                print("\n   O usa funciones que no requieren API key:")
+                print("   - Descargar: python main.py --download-video URL")
+                print("   - Info: python main.py --info URL")
+                sys.exit(1)
             
-            if config.API_KEY:
-                print("ℹ Using API key (no login required)")
-                use_api_key = True
-            else:
-                print("⚠ No API key configured.")
-                print("   Searching requires either:")
-                print("   1. YOUTUBE_API_KEY in .env (recommended, no login needed)")
-                print("   2. OAuth2 credentials (requires login)")
-                print("\n   For now, trying without authentication (may fail)...")
-                print("   To fix: Add YOUTUBE_API_KEY to .env file")
-                use_api_key = False
+            print("ℹ Using API key (no login required)")
+            youtube_client = YouTubeClient(auto_authenticate=False)
             
             videos = youtube_client.search_videos(
                 query=args.search,
                 max_results=args.search_max,
                 order=args.search_order,
-                use_api_key=use_api_key
+                use_api_key=True
             )
             
             if videos:
