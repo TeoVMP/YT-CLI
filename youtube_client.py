@@ -261,23 +261,22 @@ class YouTubeClient:
                     self._authenticate()
                 service = self.service
             
-            request = service.search().list(
-                part='snippet',
-                q=query,
-                type='video',
-                maxResults=max_results,
-                order=order
-            )
-            
-            # Si usamos API key, agregarla al request
+            # Construir request según el método de autenticación
             if use_api_key and config.API_KEY:
                 request = service.search().list(
                     part='snippet',
                     q=query,
                     type='video',
                     maxResults=max_results,
-                    order=order,
-                    key=config.API_KEY
+                    order=order
+                )
+            else:
+                request = service.search().list(
+                    part='snippet',
+                    q=query,
+                    type='video',
+                    maxResults=max_results,
+                    order=order
                 )
             
             response = request.execute()
