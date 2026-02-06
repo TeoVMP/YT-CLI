@@ -19,6 +19,7 @@ if sys.platform == 'win32':
 
 from downloader import YouTubeDownloader
 from comment_exporter import CommentExporter
+from metadata_exporter import MetadataExporter
 from utils import extract_video_id
 import config
 
@@ -96,6 +97,12 @@ Ejemplos de uso:
   
   # Ver información del video
   python main.py --info "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+  
+  # Descargar metadatos del video (JSON)
+  python main.py --download-metadata "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+  
+  # Descargar metadatos del video (texto)
+  python main.py --download-metadata dQw4w9WgXcQ --metadata-format text
         """
     )
     
@@ -876,17 +883,18 @@ Ejemplos de uso:
                 print("2. Descargar video MP4")
                 print("3. Descargar audio MP3")
                 print("4. Ver información de un video")
-                print("5. Obtener comentarios de un video")
-                print("6. Ver estadísticas de un video")
-                print("7. Ver comentarios destacados")
-                print("8. Exportar comentarios")
-                print("9. Listar mis comentarios")
-                print("10. Eliminar un comentario")
-                print("11. Responder a un comentario")
-                print("12. Actualizar un comentario")
-                print("13. Ver respuestas de un comentario")
-                print("14. Ver información de un comentario")
-                print("15. Salir")
+                print("5. Descargar metadatos de un video")
+                print("6. Obtener comentarios de un video")
+                print("7. Ver estadísticas de un video")
+                print("8. Ver comentarios destacados")
+                print("9. Exportar comentarios")
+                print("10. Listar mis comentarios")
+                print("11. Eliminar un comentario")
+                print("12. Responder a un comentario")
+                print("13. Actualizar un comentario")
+                print("14. Ver respuestas de un comentario")
+                print("15. Ver información de un comentario")
+                print("16. Salir")
                 
                 option = input("\nSelecciona una opción (1-15): ").strip()
                 
@@ -1001,6 +1009,46 @@ Ejemplos de uso:
                         print("✗ ID de video requerido o URL inválida.")
                         sys.exit(1)
                     
+                    max_comments_str = input("Número máximo de comentarios a mostrar (default 50): ").strip()
+                    max_comments = int(max_comments_str) if max_comments_str.isdigit() else 50
+                    
+                    print("\n" + "="*60)
+                    print("COMENTARIOS DEL VIDEO")
+                    print("="*60 + "\n")
+                    print(f"📹 Video ID: {video_id}")
+                    print(f"📋 Obteniendo comentarios...")
+                    
+                    comments = youtube_client.get_comments(video_id, max_results=max_comments)
+                    if comments:
+                        print(f"\n✓ Encontrados {len(comments)} comentarios:\n")
+                        for i, comment in enumerate(comments, 1):
+                            print(f"[{i}] " + "-"*76)
+                            print(f"🆔 ID del Comentario: {comment['id']}")
+                            print(f"👤 Autor: {comment['author']}")
+                            print(f"👍 Likes: {comment['like_count']}")
+                            if comment.get('reply_count', 0) > 0:
+                                print(f"💬 Respuestas: {comment['reply_count']}")
+                            print(f"📅 Fecha: {comment['published_at']}")
+                            if comment.get('author_channel_id'):
+                                print(f"📺 Canal ID: {comment['author_channel_id']}")
+                            print("-"*80)
+                            print(f"{comment['text']}")
+                            print()
+                        
+                        print(f"\n💡 Tip: Usa el ID del comentario para:")
+                        print(f"   Responder: py main.py --reply {comments[0]['id']} --reply-text 'Tu respuesta'")
+                        print(f"   Ver respuestas: py main.py --comment-replies {comments[0]['id']}")
+                        print(f"   Ver info: py main.py --comment-info {comments[0]['id']}")
+                    else:
+                        print("  No se encontraron comentarios.")
+                
+                elif option == '7':
+                    video_id_or_url = input("\nIngresa el ID o URL del video: ").strip()
+                    video_id = extract_video_id(video_id_or_url)
+                    if not video_id:
+                        print("✗ ID de video requerido o URL inválida.")
+                        sys.exit(1)
+                    
                     stats = youtube_client.get_video_stats(video_id)
                     if stats:
                         print(f"\n📹 Título: {stats['title']}")
@@ -1016,7 +1064,7 @@ Ejemplos de uso:
                     else:
                         print("✗ Error obteniendo estadísticas del video.")
                 
-                elif option == '7':
+                elif option == '8':
                     video_id_or_url = input("\nIngresa el ID o URL del video: ").strip()
                     video_id = extract_video_id(video_id_or_url)
                     if not video_id:
@@ -1073,6 +1121,39 @@ Ejemplos de uso:
                         print("  No se encontraron comentarios para exportar.")
                 
                 elif option == '9':
+                    video_id_or_url = input("\nIngresa el ID o URL del video: ").strip()
+                    video_id = extract_video_id(video_id_or_url)
+                    if not video_id:
+                        print("✗ ID de video requerido o URL inválida.")
+                        sys.exit(1)
+                    
+                    max_comments_str = input("Número máximo de comentarios (default 1000): ").strip()
+                    max_comments = int(max_comments_str) if max_comments_str.isdigit() else 1000
+                    grep_format_str = input("¿Exportar en formato grep? (s/n): ").strip().lower()
+                    grep_format = (grep_format_str == 's')
+
+                    stats = youtube_client.get_video_stats(video_id)
+                    video_title = stats['title'] if stats else None
+                    
+                    comments = youtube_client.get_comments(video_id, max_results=max_comments)
+                    
+                    if comments:
+                        print(f"✓ Obtenidos {len(comments)} comentarios")
+                        exporter = CommentExporter()
+                        file_path = exporter.export_comments_to_file(
+                            video_id=video_id,
+                            video_title=video_title,
+                            comments=comments,
+                            grep_format=grep_format
+                        )
+                        if file_path:
+                            print(f"\n✓ Comentarios exportados exitosamente a: {file_path}")
+                        else:
+                            print("✗ Error exportando comentarios.")
+                    else:
+                        print("  No se encontraron comentarios para exportar.")
+                
+                elif option == '10':
                     video_id_or_url = input("\nIngresa el ID o URL del video (o Enter para todos): ").strip()
                     if video_id_or_url:
                         video_id = extract_video_id(video_id_or_url)
@@ -1099,7 +1180,7 @@ Ejemplos de uso:
                     else:
                         print("  No se encontraron comentarios tuyos.")
                 
-                elif option == '10':
+                elif option == '11':
                     comment_id = input("\nIngresa el ID del comentario a eliminar: ").strip()
                     if not comment_id:
                         print("✗ ID de comentario requerido.")
