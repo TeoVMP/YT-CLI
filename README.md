@@ -43,10 +43,15 @@ pip install --upgrade pip setuptools wheel
 pip install -r requirements-termux.txt
 ```
 
-### 2. Configure OAuth2 Credentials
+### 2. Verify Setup (Quick Check)
 
-**Each user uses their own Google account to comment.**
+```bash
+python setup_simple.py
+```
 
+This verifies dependencies are installed. **No need to configure OAuth2 credentials** - the project uses shared credentials that work for everyone.
+
+**Optional:** If you want to use your own OAuth2 credentials:
 ```bash
 python setup.py
 ```
