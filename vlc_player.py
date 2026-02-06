@@ -146,26 +146,31 @@ class VLCPlayer:
             
             cmd = [self.vlc_path]
             
-            # Opciones de VLC
+            # Opciones de VLC - usar interfaz gráfica normal para poder cerrar fácilmente
             if fullscreen:
                 cmd.append('--fullscreen')
             
-            # NO usar --play-and-exit para evitar que se cierre inmediatamente
-            # En su lugar, usar opciones más estables
+            # Usar interfaz gráfica normal (qt por defecto en Windows/Linux, macosx en macOS)
+            # Esto permite cerrar VLC normalmente desde la ventana
             cmd.append('--intf')
-            cmd.append('dummy')  # Interfaz dummy para evitar problemas
-            cmd.append('--no-video-title-show')  # No mostrar título del video
+            system = platform.system()
+            if system == 'Darwin':
+                cmd.append('macosx')  # Interfaz nativa de macOS
+            else:
+                cmd.append('qt')  # Interfaz Qt (por defecto en Windows/Linux)
+            
+            cmd.append('--no-video-title-show')  # No mostrar título del video encima
             
             # Agregar la URL del stream
             cmd.append(stream_url)
             
-            # Ejecutar VLC en segundo plano
+            # Ejecutar VLC en segundo plano pero con interfaz gráfica
             process = subprocess.Popen(cmd,
                                      stdout=subprocess.DEVNULL,
                                      stderr=subprocess.DEVNULL)
             
-            print("✓ VLC iniciado. El video debería comenzar a reproducirse.")
-            print("   Nota: VLC se cerrará cuando termine el video o lo detengas manualmente.")
+            print("✓ VLC iniciado con interfaz gráfica.")
+            print("   Puedes cerrar VLC normalmente desde la ventana o presionando Alt+F4 (Windows) / Cmd+Q (Mac)")
             return True
         
         except Exception as e:
@@ -194,22 +199,31 @@ class VLCPlayer:
         try:
             cmd = [self.vlc_path]
             
-            # Opciones de VLC
+            # Opciones de VLC - usar interfaz gráfica normal
             if fullscreen:
                 cmd.append('--fullscreen')
             
-            cmd.append('--play-and-exit')
+            # Usar interfaz gráfica normal para poder cerrar fácilmente
+            cmd.append('--intf')
+            system = platform.system()
+            if system == 'Darwin':
+                cmd.append('macosx')
+            else:
+                cmd.append('qt')
+            
+            cmd.append('--no-video-title-show')
             cmd.append(file_path)
             
             print(f"\n▶ Reproduciendo archivo con VLC...")
             print(f"   Archivo: {file_path}")
             
-            # Ejecutar VLC en segundo plano
+            # Ejecutar VLC en segundo plano con interfaz gráfica
             subprocess.Popen(cmd,
                            stdout=subprocess.DEVNULL,
                            stderr=subprocess.DEVNULL)
             
-            print("✓ VLC iniciado. El video debería comenzar a reproducirse.")
+            print("✓ VLC iniciado con interfaz gráfica.")
+            print("   Puedes cerrar VLC normalmente desde la ventana o presionando Alt+F4 (Windows) / Cmd+Q (Mac)")
             return True
         
         except Exception as e:
