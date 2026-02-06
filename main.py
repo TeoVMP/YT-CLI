@@ -886,7 +886,9 @@ Ejemplos de uso:
                     sys.exit(1)
         
         # Modos que requieren autenticación OAuth2 (comentarios)
-        else:
+        elif any([args.video_id, args.comment, args.get_comments, args.delete_comment,
+                  args.my_comments, args.reply, args.update_comment, args.comment_replies,
+                  args.comment_info, args.monitor]):
             # Verificar si existe archivo .env
             if not os.path.exists('.env'):
                 print("\n" + "="*70)
