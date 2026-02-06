@@ -1449,65 +1449,133 @@ Ejemplos de uso:
                         print("✗ No se pudo obtener información del comentario.")
                 
                 elif option == '15':
-                    print("Saliendo...")
-                    sys.exit(0)
-                
-                elif option == '6':
-                    from vlc_player import VLCPlayer
-                    
-                    url = input("\nIngresa la URL del video de YouTube: ").strip()
-                    if not url:
-                        print("✗ URL requerida.")
+                    comment_id = input("\nEnter comment ID: ").strip()
+                    if not comment_id:
+                        print("✗ Comment ID required.")
                         sys.exit(1)
                     
-                    fullscreen_str = input("¿Reproducir en pantalla completa? (s/n): ").strip().lower()
-                    fullscreen = (fullscreen_str == 's')
-                    
-                    player = VLCPlayer()
-                    if player.play_youtube_url(url, fullscreen=fullscreen):
-                        print("\n✓ Reproducción iniciada.")
+                    info = youtube_client.get_comment_info(comment_id)
+                    if info:
+                        print(f"\n📝 Text: {info['text']}")
+                        print(f"👤 Author: {info['author']}")
+                        print(f"🆔 ID: {info['id']}")
+                        print(f"👍 Likes: {info['like_count']}")
+                        print(f"📅 Published: {info['published_at']}")
+                        if info.get('updated_at'):
+                            print(f"✏️  Updated: {info['updated_at']}")
                     else:
-                        print("\n✗ Error iniciando reproducción.")
-                        sys.exit(1)
+                        print("✗ Could not get comment information.")
                 
-                elif option == '7':
-                    from vlc_player import VLCPlayer
-                    
-                    url = input("\nIngresa la URL del video de YouTube: ").strip()
-                    if not url:
-                        print("✗ URL requerida.")
+                elif option == '16':
+                    # Verificar si existe archivo .env
+                    if not os.path.exists('.env'):
+                        print("\n⚠ OAuth2 credentials not configured.")
+                        print("   Run: python setup.py")
                         sys.exit(1)
                     
-                    print("\n⚠ ADVERTENCIA: Descargar videos puede violar términos de servicio.")
-                    fullscreen_str = input("¿Reproducir en pantalla completa? (s/n): ").strip().lower()
-                    fullscreen = (fullscreen_str == 's')
+                    try:
+                        config.validate_credentials()
+                    except ValueError as e:
+                        print(f"\n⚠ Configuration error: {e}")
+                        print("   Run: python setup.py")
+                        sys.exit(1)
                     
-                    downloader = YouTubeDownloader()
-                    player = VLCPlayer()
+                    print("\n" + "="*60)
+                    print("LOGIN / AUTHENTICATION")
+                    print("="*60)
+                    print("\n📝 You will use your personal Google account")
+                    print("✓ Only YouTube API access will be requested")
+                    print("="*60 + "\n")
                     
-                    if not player.is_available():
-                        print("✗ VLC no está disponible. Solo descargando...")
-                        result = downloader.download_video(url)
-                        if result:
-                            print(f"\n✓ Video descargado: {result}")
+                    print("Initializing YouTube client...")
+                    youtube_client = YouTubeClient()
+                    
+                    auth_info = youtube_client.get_auth_info()
+                    if auth_info['authenticated']:
+                        print("\n✓ Login successful!")
+                        print("You can now use all YouTube features.")
+                    else:
+                        print("\n⚠ Authentication completed.")
+                
+                elif option == '17':
+                    token_exists = os.path.exists(config.TOKEN_FILE)
+                    
+                    if not token_exists:
+                        print("\nℹ No active session found.")
+                        print("You are already logged out.")
                         sys.exit(0)
                     
-                    print(f"\n📥 Descargando video...")
-                    video_path = downloader.download_video(url)
+                    confirm = input("\nAre you sure you want to logout? (y/n): ").strip().lower()
                     
-                    if video_path:
-                        print(f"\n✓ Video descargado: {video_path}")
-                        print("\n▶ Iniciando reproducción...")
-                        if player.play_file(video_path, fullscreen=fullscreen):
-                            print("\n✓ Reproducción iniciada.")
+                    if confirm not in ['y', 'yes']:
+                        print("✗ Logout cancelled.")
+                        sys.exit(0)
+                    
+                    try:
+                        config.validate_credentials()
+                        youtube_client = YouTubeClient()
+                        success = youtube_client.logout()
+                        
+                        if success:
+                            print("\n✓ Logout successful!")
                         else:
-                            print("\n⚠ Video descargado pero no se pudo iniciar VLC.")
-                    else:
-                        print("\n✗ Error descargando el video.")
-                        sys.exit(1)
+                            print("\n⚠ Logout completed with warnings.")
+                    except Exception as e:
+                        if os.path.exists(config.TOKEN_FILE):
+                            os.remove(config.TOKEN_FILE)
+                            print(f"\n✓ Token file deleted.")
+                        else:
+                            print(f"\n✗ Error: {str(e)}")
+                
+                elif option == '18':
+                    print("\n" + "="*60)
+                    print("AUTHENTICATION STATUS")
+                    print("="*60 + "\n")
+                    
+                    config_exists = os.path.exists('.env')
+                    token_exists = os.path.exists(config.TOKEN_FILE)
+                    
+                    print(f"Configuration file (.env): {'✓ Found' if config_exists else '✗ Not found'}")
+                    print(f"Token file: {'✓ Found' if token_exists else '✗ Not found'}")
+                    
+                    if not config_exists:
+                        print("\n⚠ OAuth2 credentials not configured.")
+                        print("   Run: python setup.py")
+                        sys.exit(0)
+                    
+                    if not token_exists:
+                        print("\nℹ No active session.")
+                        print("   Select option 16 to login.")
+                        sys.exit(0)
+                    
+                    try:
+                        config.validate_credentials()
+                        youtube_client = YouTubeClient()
+                        auth_info = youtube_client.get_auth_info()
+                        
+                        print(f"\nAuthentication Status:")
+                        print(f"  Authenticated: {'✓ Yes' if auth_info['authenticated'] else '✗ No'}")
+                        print(f"  Token valid: {'✓ Yes' if auth_info['token_valid'] else '✗ No'}")
+                        print(f"  Token expired: {'⚠ Yes' if auth_info['token_expired'] else '✓ No'}")
+                        print(f"  Refresh token: {'✓ Available' if auth_info['has_refresh_token'] else '✗ Not available'}")
+                        
+                        if auth_info['authenticated'] and auth_info['token_valid']:
+                            print("\n✓ You are logged in and ready to use YouTube features.")
+                        elif auth_info['authenticated'] and auth_info.get('can_refresh'):
+                            print("\n⚠ Token expired but can be refreshed automatically.")
+                        else:
+                            print("\n⚠ Session may need re-authentication.")
+                            print("   Select option 16 to login.")
+                    except Exception as e:
+                        print(f"\n✗ Error checking authentication: {str(e)}")
+                        print("   Select option 16 to login.")
+                
+                elif option == '19':
+                    print("Exiting...")
+                    sys.exit(0)
                 
                 else:
-                    print("✗ Opción inválida.")
+                    print("✗ Invalid option.")
                     sys.exit(1)
     
     except KeyboardInterrupt:
