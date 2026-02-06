@@ -27,6 +27,11 @@ REDIRECT_URI = os.getenv('REDIRECT_URI', 'http://localhost:8080')
 # API Key (opcional, para funciones de solo lectura como búsqueda)
 API_KEY = os.getenv('YOUTUBE_API_KEY')
 
+# Credenciales de Spotify (opcional, para reproducir playlists de Spotify)
+SPOTIFY_CLIENT_ID = os.getenv('SPOTIFY_CLIENT_ID')
+SPOTIFY_CLIENT_SECRET = os.getenv('SPOTIFY_CLIENT_SECRET')
+SPOTIFY_REDIRECT_URI = os.getenv('SPOTIFY_REDIRECT_URI', 'http://localhost:8080')
+
 # Validar que las credenciales estén configuradas (solo si se necesitan)
 # Las funciones de descarga NO requieren credenciales OAuth2
 def validate_credentials():

@@ -10,6 +10,7 @@ Complete bot to interact with YouTube: comment, download videos/audio, view stat
 - ✅ **Export comments** to text files
 - ✅ **Play videos** automatically with VLC
 - ✅ **Play personal playlists** from your YouTube account
+- ✅ **Play Spotify playlists** by mirroring to YouTube videos
 - ✅ **Security system**: Only YouTube access (no Gmail)
 - ✅ **Configurable rate limiting**
 
@@ -182,16 +183,66 @@ python main.py --search "viral" --search-order viewCount
 
 ### Playlists
 
+#### YouTube Playlists
+
 ```bash
-# List your personal playlists
+# List your personal playlists (shows playlist IDs)
 python main.py --list-playlists
 
 # Play a personal playlist by ID
 python main.py --play-playlist PLAYLIST_ID
 
+# Example: Play a specific playlist
+python main.py --play-playlist PLrAXtmErZgaOj4Kz3gO05W8sgJkVO8LtQ
+
 # Play playlist in fullscreen
 python main.py --play-playlist PLAYLIST_ID --play-fullscreen
+
+# Complete workflow:
+# 1. First, list your playlists to get the ID
+python main.py --list-playlists
+# 2. Then use the ID to play the playlist
+python main.py --play-playlist YOUR_PLAYLIST_ID
 ```
+
+#### Spotify Playlists (Mirror to YouTube)
+
+```bash
+# Play a Spotify playlist by mirroring songs to YouTube videos
+python main.py --play-spotify-playlist SPOTIFY_PLAYLIST_URL
+
+# Example with Spotify playlist URL
+python main.py --play-spotify-playlist "https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M"
+
+# Example with playlist ID
+python main.py --play-spotify-playlist 37i9dQZF1DXcBWIGoYBM5M
+
+# Play in fullscreen
+python main.py --play-spotify-playlist SPOTIFY_PLAYLIST_URL --play-fullscreen
+```
+
+**How it works:**
+1. Gets all songs from the Spotify playlist
+2. Searches each song on YouTube
+3. Plays the found YouTube videos sequentially with VLC
+
+**Requirements:**
+- Spotify credentials (required):
+  - Get credentials at: https://developer.spotify.com/dashboard
+  - Add to `.env`: `SPOTIFY_CLIENT_ID` and `SPOTIFY_CLIENT_SECRET`
+  - 📖 **Guía completa**: Ver [SPOTIFY_SETUP.md](SPOTIFY_SETUP.md) para instrucciones detalladas
+- YouTube API key (recommended) or OAuth2 session for searching
+- VLC installed for playback
+
+**Quick Setup:**
+1. Go to https://developer.spotify.com/dashboard
+2. Create a new app
+3. Copy Client ID and Client Secret
+4. Add them to your `.env` file:
+   ```env
+   SPOTIFY_CLIENT_ID=your_client_id
+   SPOTIFY_CLIENT_SECRET=your_client_secret
+   ```
 
 ### Authentication Management
 
@@ -221,6 +272,14 @@ python main.py --auth-status
 GOOGLE_CLIENT_ID=your_client_id
 GOOGLE_CLIENT_SECRET=your_client_secret
 REDIRECT_URI=http://localhost:8080
+
+# YouTube API Key (optional, for search without OAuth)
+YOUTUBE_API_KEY=your_api_key
+
+# Spotify credentials (optional, for Spotify playlist support)
+SPOTIFY_CLIENT_ID=your_spotify_client_id
+SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
+SPOTIFY_REDIRECT_URI=http://localhost:8080
 
 # Rate limiting
 MAX_COMMENTS_PER_DAY=50

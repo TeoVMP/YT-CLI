@@ -8,6 +8,9 @@ python-dotenv>=1.0.0
 yt-dlp>=2023.12.30
 mutagen>=1.47.0  # Para metadata de MP3
 
+# Spotify Integration
+spotipy>=2.23.0  # Para interactuar con Spotify API
+
 # Optional: For advanced content analysis
 # nltk>=3.8.1
 # textblob>=0.17.1

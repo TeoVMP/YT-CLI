@@ -1035,6 +1035,30 @@ class YouTubeClient:
             print(f"✗ Error obteniendo playlists: {str(e)}")
             return []
     
+    def search_song_on_youtube(self, artist: str, song_title: str, max_results: int = 1) -> Optional[Dict]:
+        """
+        Busca una canción específica en YouTube.
+        
+        Args:
+            artist: Nombre del artista
+            song_title: Título de la canción
+            max_results: Número máximo de resultados (default: 1 para obtener el mejor match)
+            
+        Returns:
+            dict: Información del video encontrado o None si no se encuentra
+        """
+        # Construir query de búsqueda
+        query = f"{artist} {song_title}"
+        
+        # Buscar videos
+        videos = self.search_videos(query, max_results=max_results, order='relevance', use_api_key=bool(config.API_KEY))
+        
+        if videos:
+            # Retornar el primer resultado (más relevante)
+            return videos[0]
+        
+        return None
+    
     def get_playlist_videos(self, playlist_id: str, max_results: int = 50) -> list:
         """
         Obtiene los videos de una playlist.

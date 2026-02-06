@@ -375,6 +375,13 @@ Ejemplos de uso:
         help='Play a personal YouTube playlist by ID'
     )
     
+    parser.add_argument(
+        '--play-spotify-playlist',
+        type=str,
+        metavar='SPOTIFY_PLAYLIST_URL_OR_ID',
+        help='Play a Spotify playlist by mirroring songs to YouTube videos'
+    )
+    
     # --moderate y --monitor ya están definidos arriba, no duplicar
     
     args = parser.parse_args()
@@ -790,6 +797,138 @@ Ejemplos de uso:
             
             if success:
                 print(f"\n✓ Reproducción iniciada. VLC reproducirá {len(video_urls)} videos secuencialmente.")
+            else:
+                print("\n✗ Error iniciando la reproducción.")
+                sys.exit(1)
+            
+            sys.exit(0)
+        
+        # Modo: Reproducir playlist de Spotify (mirroreando de YouTube)
+        elif args.play_spotify_playlist:
+            print("\n" + "="*60)
+            print("REPRODUCIR PLAYLIST DE SPOTIFY (MIRROR YOUTUBE)")
+            print("="*60 + "\n")
+            
+            # Verificar si spotipy está instalado
+            try:
+                import spotipy
+            except ImportError:
+                print("✗ spotipy no está instalado.")
+                print("\n📥 Instalación:")
+                print("   pip install spotipy")
+                print("\n" + "="*60 + "\n")
+                sys.exit(1)
+            
+            from spotify_client import SpotifyClient
+            from youtube_client import YouTubeClient
+            from vlc_player import VLCPlayer
+            
+            player = VLCPlayer()
+            
+            if not player.is_available():
+                print("✗ VLC no está disponible. Instala VLC para reproducir playlists.")
+                sys.exit(1)
+            
+            # Inicializar cliente de Spotify
+            try:
+                spotify_client = SpotifyClient(use_auth=False)  # Intentar sin auth primero
+            except ValueError as e:
+                print(f"⚠ {str(e)}")
+                print("\n💡 Para usar playlists privadas, configura SPOTIFY_CLIENT_ID y")
+                print("   SPOTIFY_CLIENT_SECRET en tu archivo .env")
+                print("\n   Obtén credenciales en: https://developer.spotify.com/dashboard")
+                print("\n   Por ahora, solo funcionará con playlists públicas.")
+                sys.exit(1)
+            
+            # Extraer ID de la playlist
+            playlist_id = spotify_client.extract_playlist_id(args.play_spotify_playlist)
+            if not playlist_id:
+                print(f"✗ No se pudo extraer el ID de la playlist de: {args.play_spotify_playlist}")
+                print("   Asegúrate de usar una URL válida de Spotify o un ID de playlist.")
+                sys.exit(1)
+            
+            # Obtener información de la playlist
+            print(f"📋 Obteniendo información de la playlist de Spotify...")
+            playlist_info = spotify_client.get_playlist_info(playlist_id)
+            
+            if playlist_info:
+                print(f"✓ Playlist: {playlist_info['name']}")
+                print(f"  Artista/Creador: {playlist_info['owner']}")
+                print(f"  Canciones: {playlist_info['tracks_count']}")
+                print()
+            
+            # Obtener tracks de la playlist
+            print(f"📥 Obteniendo canciones de la playlist...")
+            try:
+                tracks = spotify_client.get_playlist_tracks(playlist_id)
+            except Exception as e:
+                print(f"✗ Error obteniendo canciones: {str(e)}")
+                print("\n💡 Posibles soluciones:")
+                print("   1. Verifica que la playlist sea pública")
+                print("   2. Configura SPOTIFY_CLIENT_ID y SPOTIFY_CLIENT_SECRET en .env")
+                print("   3. Para playlists privadas, usa autenticación OAuth")
+                sys.exit(1)
+            
+            if not tracks:
+                print("✗ No se encontraron canciones en la playlist.")
+                sys.exit(1)
+            
+            print(f"✓ Encontradas {len(tracks)} canciones")
+            
+            # Inicializar cliente de YouTube (para búsqueda)
+            print(f"\n🔍 Buscando videos en YouTube para cada canción...")
+            youtube_client = YouTubeClient(auto_authenticate=False)
+            
+            # Si hay API key, usarla para búsqueda (más rápido)
+            if config.API_KEY:
+                print("ℹ Usando API key de YouTube para búsqueda")
+            else:
+                print("ℹ Usando sesión guardada de YouTube (si existe)")
+            
+            video_urls = []
+            not_found = []
+            
+            for i, track in enumerate(tracks, 1):
+                print(f"   [{i}/{len(tracks)}] Buscando: {track['artist']} - {track['name']}")
+                
+                try:
+                    video = youtube_client.search_song_on_youtube(
+                        track['artist'],
+                        track['name'],
+                        max_results=1
+                    )
+                    
+                    if video:
+                        video_urls.append(video['url'])
+                        print(f"      ✓ Encontrado: {video['title']}")
+                    else:
+                        not_found.append(f"{track['artist']} - {track['name']}")
+                        print(f"      ⚠ No encontrado en YouTube")
+                
+                except Exception as e:
+                    print(f"      ⚠ Error buscando: {str(e)}")
+                    not_found.append(f"{track['artist']} - {track['name']}")
+            
+            if not video_urls:
+                print("\n✗ No se encontraron videos en YouTube para ninguna canción.")
+                sys.exit(1)
+            
+            print(f"\n✓ Encontrados {len(video_urls)} videos de {len(tracks)} canciones")
+            
+            if not_found:
+                print(f"\n⚠ {len(not_found)} canciones no se encontraron en YouTube:")
+                for song in not_found[:5]:  # Mostrar solo las primeras 5
+                    print(f"   - {song}")
+                if len(not_found) > 5:
+                    print(f"   ... y {len(not_found) - 5} más")
+            
+            # Reproducir playlist
+            print(f"\n▶ Iniciando reproducción de {len(video_urls)} videos...")
+            success = player.play_playlist(video_urls, fullscreen=args.play_fullscreen)
+            
+            if success:
+                print(f"\n✓ Reproducción iniciada. VLC reproducirá {len(video_urls)} videos secuencialmente.")
+                print(f"   Videos encontrados: {len(video_urls)}/{len(tracks)}")
             else:
                 print("\n✗ Error iniciando la reproducción.")
                 sys.exit(1)
@@ -1409,7 +1548,8 @@ Ejemplos de uso:
                 print("19. Search YouTube videos")
                 print("20. List my playlists")
                 print("21. Play a playlist")
-                print("22. Exit")
+                print("22. Play Spotify playlist (mirror to YouTube)")
+                print("23. Exit")
                 
                 option = input("\nSelect an option (1-20): ").strip()
                 
@@ -1960,6 +2100,62 @@ Ejemplos de uso:
                         print("✗ No videos found in playlist.")
                 
                 elif option == '22':
+                    spotify_url = input("\nEnter Spotify playlist URL or ID: ").strip()
+                    if not spotify_url:
+                        print("✗ Spotify playlist URL or ID required.")
+                        sys.exit(1)
+                    
+                    try:
+                        from spotify_client import SpotifyClient
+                        from youtube_client import YouTubeClient
+                        from vlc_player import VLCPlayer
+                        
+                        spotify_client = SpotifyClient(use_auth=False)
+                        player = VLCPlayer()
+                        
+                        if not player.is_available():
+                            print("✗ VLC not available.")
+                            sys.exit(1)
+                        
+                        playlist_id = spotify_client.extract_playlist_id(spotify_url)
+                        if not playlist_id:
+                            print("✗ Invalid Spotify playlist URL or ID.")
+                            sys.exit(1)
+                        
+                        tracks = spotify_client.get_playlist_tracks(playlist_id)
+                        if not tracks:
+                            print("✗ No tracks found in playlist.")
+                            sys.exit(1)
+                        
+                        youtube_client = YouTubeClient(auto_authenticate=False)
+                        video_urls = []
+                        
+                        print(f"\n🔍 Searching YouTube for {len(tracks)} songs...")
+                        for i, track in enumerate(tracks, 1):
+                            print(f"   [{i}/{len(tracks)}] {track['artist']} - {track['name']}")
+                            video = youtube_client.search_song_on_youtube(
+                                track['artist'],
+                                track['name']
+                            )
+                            if video:
+                                video_urls.append(video['url'])
+                                print(f"      ✓ Found")
+                            else:
+                                print(f"      ⚠ Not found")
+                        
+                        if video_urls:
+                            print(f"\n▶ Playing {len(video_urls)} videos...")
+                            success = player.play_playlist(video_urls)
+                            if success:
+                                print("✓ Playback started.")
+                            else:
+                                print("✗ Error starting playback.")
+                        else:
+                            print("✗ No videos found.")
+                    except Exception as e:
+                        print(f"✗ Error: {str(e)}")
+                
+                elif option == '23':
                     print("Exiting...")
                     sys.exit(0)
                 
