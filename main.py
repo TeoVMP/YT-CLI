@@ -658,29 +658,22 @@ Ejemplos de uso:
             print(f"📋 Order: {args.search_order}")
             print()
             
-            # La búsqueda requiere API key (no requiere login)
+            # La búsqueda puede usar API key (sin login) o OAuth2 (si ya hay token)
             from youtube_client import YouTubeClient
             
-            if not config.API_KEY:
-                print("✗ API key no configurada.")
-                print("\n   La búsqueda requiere YOUTUBE_API_KEY (no requiere login).")
-                print("\n   Para configurar:")
-                print("   1. Ve a: https://console.cloud.google.com/apis/credentials")
-                print("   2. Crea una API key (no OAuth2)")
-                print("   3. Agrega a .env: YOUTUBE_API_KEY=tu_api_key")
-                print("\n   O usa funciones que no requieren API key:")
-                print("   - Descargar: python main.py --download-video URL")
-                print("   - Info: python main.py --info URL")
-                sys.exit(1)
-            
-            print("ℹ Using API key (no login required)")
             youtube_client = YouTubeClient(auto_authenticate=False)
+            
+            if config.API_KEY:
+                print("ℹ Using API key (no login required)")
+            else:
+                print("ℹ No API key found. Checking for saved session...")
+                # Si hay token guardado, se usará automáticamente en search_videos
             
             videos = youtube_client.search_videos(
                 query=args.search,
                 max_results=args.search_max,
                 order=args.search_order,
-                use_api_key=True
+                use_api_key=bool(config.API_KEY)  # Solo marcar como use_api_key si hay API key
             )
             
             if videos:

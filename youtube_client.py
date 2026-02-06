@@ -254,8 +254,8 @@ class YouTubeClient:
             # Limitar max_results a 50 (límite de la API)
             max_results = min(max_results, 50)
             
-            # Para búsqueda, usar API key si está disponible (sin autenticación)
-            # Si no hay API key, NO intentar autenticarse (búsqueda no debería requerir login)
+            # Para búsqueda, priorizar API key (sin autenticación)
+            # Si no hay API key, intentar usar OAuth2 solo si ya hay token guardado (sin forzar login)
             if config.API_KEY:
                 from googleapiclient.discovery import build
                 service = build(
@@ -264,13 +264,46 @@ class YouTubeClient:
                     developerKey=config.API_KEY
                 )
             else:
-                # Sin API key, la búsqueda no puede funcionar sin autenticación
-                # Pero no forzamos autenticación para búsqueda
-                raise Exception(
-                    "API key no configurada. La búsqueda requiere YOUTUBE_API_KEY.\n"
-                    "Agrega YOUTUBE_API_KEY a tu archivo .env\n"
-                    "Obtén una en: https://console.cloud.google.com/apis/credentials"
-                )
+                # Sin API key, intentar usar OAuth2 solo si ya hay token (sin forzar login)
+                if os.path.exists(config.TOKEN_FILE):
+                    try:
+                        from google.oauth2.credentials import Credentials
+                        creds = Credentials.from_authorized_user_file(
+                            config.TOKEN_FILE,
+                            config.YOUTUBE_SCOPES
+                        )
+                        # Si el token está expirado, intentar refrescarlo
+                        if creds.expired and creds.refresh_token:
+                            creds.refresh(Request())
+                        # Si las credenciales son válidas, usarlas
+                        if creds.valid:
+                            if not self.service:
+                                self.credentials = creds
+                                self.service = build(
+                                    config.API_SERVICE_NAME,
+                                    config.API_VERSION,
+                                    credentials=creds
+                                )
+                            service = self.service
+                        else:
+                            raise Exception("Token inválido. Ejecuta: python main.py --login")
+                    except Exception as e:
+                        raise Exception(
+                            f"Error usando token guardado: {str(e)}\n"
+                            "Ejecuta: python main.py --login\n"
+                            "O configura YOUTUBE_API_KEY en .env para búsqueda sin login"
+                        )
+                else:
+                    # Sin API key ni token, no se puede buscar
+                    raise Exception(
+                        "API key no configurada y no hay sesión activa.\n\n"
+                        "Opciones:\n"
+                        "1. Configura YOUTUBE_API_KEY en .env (recomendado, no requiere login)\n"
+                        "   Obtén una en: https://console.cloud.google.com/apis/credentials\n\n"
+                        "2. O inicia sesión primero:\n"
+                        "   python main.py --login\n"
+                        "   Luego podrás buscar sin API key"
+                    )
             
             # Construir request según el método de autenticación
             if use_api_key and config.API_KEY:
