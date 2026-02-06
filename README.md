@@ -16,7 +16,17 @@ Complete bot to interact with YouTube: comment, download videos/audio, view stat
 
 ### 1. Install Dependencies
 
+**For Windows/Linux/Mac:**
 ```bash
+pip install -r requirements.txt
+```
+
+**For Termux (Android):**
+See [TERMUX_INSTALL.md](TERMUX_INSTALL.md) for detailed instructions. Quick version:
+```bash
+pkg install python rust cargo clang make libffi openssl python-dev
+pip install --upgrade pip setuptools wheel
+pip install cryptography
 pip install -r requirements.txt
 ```
 

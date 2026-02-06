@@ -1,0 +1,20 @@
+# Requirements for Termux (Android)
+# Install system dependencies first: pkg install python rust cargo clang make libffi openssl python-dev
+# Then: pip install --upgrade pip setuptools wheel
+# Then: pip install cryptography
+# Finally: pip install -r requirements-termux.txt
+
+# YouTube Bot Dependencies
+google-api-python-client>=2.100.0
+google-auth-httplib2>=0.1.1
+google-auth-oauthlib>=1.1.0
+python-dotenv>=1.0.0
+
+# For video/audio downloading
+yt-dlp>=2023.12.30
+mutagen>=1.47.0
+
+# Note: cryptography should be installed separately or from Termux packages
+# If cryptography is already installed via pkg install py312-cryptography, 
+# you can skip it here. Otherwise install it first:
+# pip install cryptography
