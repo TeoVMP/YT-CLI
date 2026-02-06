@@ -187,12 +187,97 @@ Ejemplos de uso:
         help='Generar nombres de cuenta ofuscados y genéricos'
     )
     
+    parser.add_argument(
+        '--play',
+        type=str,
+        metavar='URL_OR_FILE',
+        help='Reproducir video de YouTube o archivo local con VLC'
+    )
+    
+    parser.add_argument(
+        '--play-fullscreen',
+        action='store_true',
+        help='Reproducir en pantalla completa (usar con --play)'
+    )
+    
+    parser.add_argument(
+        '--download-and-play',
+        type=str,
+        metavar='URL',
+        help='Descargar video y reproducirlo automáticamente con VLC'
+    )
+    
     args = parser.parse_args()
     
     # Modo: Generar nombres de cuenta
     if args.generate_account:
         from generate_account import main as generate_main
         generate_main()
+        sys.exit(0)
+    
+    # Modo: Reproducir video con VLC (NO requiere autenticación)
+    if args.play:
+        from vlc_player import VLCPlayer
+        
+        print("\n" + "="*60)
+        print("REPRODUCTOR VLC")
+        print("="*60 + "\n")
+        
+        player = VLCPlayer()
+        
+        # Verificar si es una URL o un archivo local
+        if args.play.startswith('http://') or args.play.startswith('https://'):
+            # Es una URL de YouTube
+            print(f"📺 Reproduciendo desde URL de YouTube...")
+            success = player.play_youtube_url(args.play, fullscreen=args.play_fullscreen)
+        else:
+            # Es un archivo local
+            print(f"📁 Reproduciendo archivo local...")
+            success = player.play_file(args.play, fullscreen=args.play_fullscreen)
+        
+        if not success:
+            sys.exit(1)
+        else:
+            sys.exit(0)
+    
+    # Modo: Descargar y reproducir
+    if args.download_and_play:
+        from vlc_player import VLCPlayer
+        
+        print("\n" + "="*60)
+        print("DESCARGAR Y REPRODUCIR")
+        print("="*60 + "\n")
+        
+        print("⚠ ADVERTENCIA: Descargar videos puede violar los términos de servicio")
+        print("   de YouTube y leyes de derechos de autor. Usa responsablemente.")
+        print("="*60 + "\n")
+        
+        downloader = YouTubeDownloader()
+        player = VLCPlayer()
+        
+        if not player.is_available():
+            print("✗ VLC no está disponible. Descargando video sin reproducir...")
+            result = downloader.download_video(args.download_and_play)
+            if result:
+                print(f"\n✓ Video descargado: {result}")
+            sys.exit(0)
+        
+        print(f"📥 Descargando video: {args.download_and_play}")
+        video_path = downloader.download_video(args.download_and_play)
+        
+        if video_path:
+            print(f"\n✓ Video descargado: {video_path}")
+            print("\n▶ Iniciando reproducción automática...")
+            success = player.play_file(video_path, fullscreen=args.play_fullscreen)
+            
+            if success:
+                print("\n✓ Reproducción iniciada. VLC se cerrará automáticamente al terminar.")
+            else:
+                print("\n⚠ Video descargado pero no se pudo iniciar VLC.")
+        else:
+            print("\n✗ Error descargando el video.")
+            sys.exit(1)
+        
         sys.exit(0)
     
     # Verificar si necesita configuración
@@ -636,6 +721,60 @@ Ejemplos de uso:
                             print(f"   Likes: {comment['like_count']}")
                     else:
                         print("  No se encontraron comentarios.")
+                
+                elif option == '6':
+                    from vlc_player import VLCPlayer
+                    
+                    url = input("\nIngresa la URL del video de YouTube: ").strip()
+                    if not url:
+                        print("✗ URL requerida.")
+                        sys.exit(1)
+                    
+                    fullscreen_str = input("¿Reproducir en pantalla completa? (s/n): ").strip().lower()
+                    fullscreen = (fullscreen_str == 's')
+                    
+                    player = VLCPlayer()
+                    if player.play_youtube_url(url, fullscreen=fullscreen):
+                        print("\n✓ Reproducción iniciada.")
+                    else:
+                        print("\n✗ Error iniciando reproducción.")
+                        sys.exit(1)
+                
+                elif option == '7':
+                    from vlc_player import VLCPlayer
+                    
+                    url = input("\nIngresa la URL del video de YouTube: ").strip()
+                    if not url:
+                        print("✗ URL requerida.")
+                        sys.exit(1)
+                    
+                    print("\n⚠ ADVERTENCIA: Descargar videos puede violar términos de servicio.")
+                    fullscreen_str = input("¿Reproducir en pantalla completa? (s/n): ").strip().lower()
+                    fullscreen = (fullscreen_str == 's')
+                    
+                    downloader = YouTubeDownloader()
+                    player = VLCPlayer()
+                    
+                    if not player.is_available():
+                        print("✗ VLC no está disponible. Solo descargando...")
+                        result = downloader.download_video(url)
+                        if result:
+                            print(f"\n✓ Video descargado: {result}")
+                        sys.exit(0)
+                    
+                    print(f"\n📥 Descargando video...")
+                    video_path = downloader.download_video(url)
+                    
+                    if video_path:
+                        print(f"\n✓ Video descargado: {video_path}")
+                        print("\n▶ Iniciando reproducción...")
+                        if player.play_file(video_path, fullscreen=fullscreen):
+                            print("\n✓ Reproducción iniciada.")
+                        else:
+                            print("\n⚠ Video descargado pero no se pudo iniciar VLC.")
+                    else:
+                        print("\n✗ Error descargando el video.")
+                        sys.exit(1)
                 
                 else:
                     print("✗ Opción inválida.")
