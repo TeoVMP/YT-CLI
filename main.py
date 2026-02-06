@@ -484,43 +484,64 @@ Ejemplos de uso:
             
             # Modo: Publicar comentario
             if args.video_id and args.comment:
-            print(f"\n📝 Publicando comentario en video: {args.video_id}")
-            result = youtube_client.comment_video(args.video_id, args.comment)
-            
-            if result.get('success'):
-                print("\n✓ Comentario publicado exitosamente!")
+                # Extraer ID del video si es una URL
+                video_id = extract_video_id(args.video_id)
+                if not video_id:
+                    print(f"✗ No se pudo extraer el ID del video de: {args.video_id}")
+                    print("   Asegúrate de usar una URL válida de YouTube o un ID de video.")
+                    sys.exit(1)
                 
-                # Activar moderación si se solicita
-                if args.moderate and config.MODERATION_ENABLED:
-                    print("\n🔍 Activando moderación automática...")
-                    moderator = Moderator(youtube_client)
-                    moderator.monitor_video_comments(args.video_id)
-            else:
-                print(f"\n✗ Error: {result.get('error', 'Error desconocido')}")
-                sys.exit(1)
+                print(f"\n📝 Publicando comentario en video: {video_id}")
+                result = youtube_client.comment_video(video_id, args.comment)
+                
+                if result.get('success'):
+                    print("\n✓ Comentario publicado exitosamente!")
+                    
+                    # Activar moderación si se solicita
+                    if args.moderate and config.MODERATION_ENABLED:
+                        print("\n🔍 Activando moderación automática...")
+                        moderator = Moderator(youtube_client)
+                        moderator.monitor_video_comments(video_id)
+                else:
+                    print(f"\n✗ Error: {result.get('error', 'Error desconocido')}")
+                    sys.exit(1)
             
             # Modo: Obtener comentarios
             elif args.video_id and args.get_comments:
-            print(f"\n📋 Obteniendo comentarios del video: {args.video_id}")
-            comments = youtube_client.get_comments(args.video_id)
-            
-            if comments:
-                print(f"\n✓ Encontrados {len(comments)} comentarios:")
-                for i, comment in enumerate(comments[:10], 1):  # Mostrar primeros 10
-                    print(f"\n{i}. {comment['text'][:50]}...")
-                    print(f"   Autor: {comment['author']}")
-                    print(f"   Likes: {comment['like_count']}")
-            else:
-                print("  No se encontraron comentarios.")
+                # Extraer ID del video si es una URL
+                video_id = extract_video_id(args.video_id)
+                if not video_id:
+                    print(f"✗ No se pudo extraer el ID del video de: {args.video_id}")
+                    print("   Asegúrate de usar una URL válida de YouTube o un ID de video.")
+                    sys.exit(1)
+                
+                print(f"\n📋 Obteniendo comentarios del video: {video_id}")
+                comments = youtube_client.get_comments(video_id)
+                
+                if comments:
+                    print(f"\n✓ Encontrados {len(comments)} comentarios:")
+                    for i, comment in enumerate(comments[:10], 1):  # Mostrar primeros 10
+                        print(f"\n{i}. {comment['text'][:50]}...")
+                        print(f"   Autor: {comment['author']}")
+                        print(f"   Likes: {comment['like_count']}")
+                else:
+                    print("  No se encontraron comentarios.")
             
             # Modo: Monitoreo continuo
             elif args.monitor and args.video_id:
-            if not config.MODERATION_ENABLED:
-                print("⚠ Moderación deshabilitada en configuración.")
-                sys.exit(1)
-            
-            moderator = Moderator(youtube_client)
-            moderator.start_monitoring([args.video_id])
+                # Extraer ID del video si es una URL
+                video_id = extract_video_id(args.video_id)
+                if not video_id:
+                    print(f"✗ No se pudo extraer el ID del video de: {args.video_id}")
+                    print("   Asegúrate de usar una URL válida de YouTube o un ID de video.")
+                    sys.exit(1)
+                
+                if not config.MODERATION_ENABLED:
+                    print("⚠ Moderación deshabilitada en configuración.")
+                    sys.exit(1)
+                
+                moderator = Moderator(youtube_client)
+                moderator.start_monitoring([video_id])
             
             # Modo interactivo (solo si no se proporcionó ningún argumento)
             elif not any([args.video_id, args.comment, args.moderate, args.monitor, args.get_comments]):
