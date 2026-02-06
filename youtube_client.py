@@ -86,18 +86,31 @@ class YouTubeClient:
                 )
                 
                 print("\n" + "="*60)
-                print("AUTENTICACIÓN REQUERIDA")
+                print("🔐 AUTENTICACIÓN REQUERIDA")
                 print("="*60)
-                print("Se abrirá tu navegador para autorizar la aplicación.")
-                print("\n📝 INICIA SESIÓN CON TU CUENTA PERSONAL DE GOOGLE")
-                print("\nIMPORTANTE:")
-                print("- Solo se solicita acceso a YouTube (comentar)")
-                print("- NO se solicita acceso a tu email/Gmail")
-                print("- Puedes verificar los permisos antes de autorizar")
-                print("- El token se guarda localmente en tu computadora")
-                print("="*60 + "\n")
+                print("\n💡 Esta función requiere autenticación con tu cuenta de Google.")
+                print("   Solo se solicita acceso a YouTube (comentar/gestionar comentarios).")
+                print("   NO se solicita acceso a tu email/Gmail.\n")
                 
-                creds = flow.run_local_server(port=8080)
+                # Detectar si estamos en Termux (Android)
+                is_termux = os.environ.get('TERMUX_VERSION') is not None
+                
+                if is_termux:
+                    print("📱 Detectado Termux (Android)")
+                    print("   Se usará autenticación por consola (sin navegador).\n")
+                    print("📝 Pasos:")
+                    print("   1. Se mostrará una URL - cópiala")
+                    print("   2. Ábrela en tu navegador móvil")
+                    print("   3. Inicia sesión y autoriza")
+                    print("   4. Copia el código de autorización")
+                    print("   5. Pégalo aquí\n")
+                    print("="*60 + "\n")
+                    creds = flow.run_console()
+                else:
+                    print("🌐 Se abrirá tu navegador automáticamente...")
+                    print("   Si no se abre, copia la URL que aparecerá.\n")
+                    print("="*60 + "\n")
+                    creds = flow.run_local_server(port=8080)
             
             # Guardar credenciales para uso futuro
             with open(config.TOKEN_FILE, 'w') as token:
