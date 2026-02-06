@@ -557,14 +557,16 @@ Ejemplos de uso:
         else:
             # Mostrar información de seguridad solo cuando se necesita autenticación
             print("\n" + "="*60)
-            print("BOT DE YOUTUBE - PROTECCIÓN DE CUENTA")
+            print("BOT DE YOUTUBE - AUTENTICACIÓN")
             print("="*60)
+            print("📝 Usarás tu propia cuenta de Google para comentar")
             print("✓ Solo se solicita acceso a YouTube API")
             print("✓ NO se solicita acceso a email/Gmail")
             print("✓ Los tokens solo permiten acciones en YouTube")
             print("="*60 + "\n")
             # Inicializar cliente de YouTube
             print("Inicializando cliente de YouTube...")
+            print("💡 Se abrirá tu navegador para que inicies sesión con tu cuenta personal")
             youtube_client = YouTubeClient()
             
             # Modo: Publicar comentario

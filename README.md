@@ -1,288 +1,171 @@
-# Bot de YouTube - Comentarios y Descargas
+# YouTube Bot - Bot para Comentar y Descargar Videos de YouTube
 
-Bot automatizado para comentar, ver y descargar videos de YouTube. Incluye:
-- ✅ Comentar en videos usando la API oficial de Google
-- ✅ Descargar videos en formato MP4
-- ✅ Extraer y descargar audio en formato MP3
-- ✅ Ver información de videos sin descargarlos
-- ✅ Sistema de moderación automática basado en reglas éticas personalizables
+Bot completo para interactuar con YouTube: comentar, descargar videos/audio, ver estadísticas y más.
 
-## 🔒 Protección de Cuenta
+## 🎯 Características Principales
 
-### ⚠️ IMPORTANTE: Seguridad de Credenciales
+- ✅ **Comentar en videos** usando tu cuenta personal de Google
+- ✅ **Descargar videos MP4** y **audio MP3**
+- ✅ **Ver estadísticas** de videos
+- ✅ **Exportar comentarios** a archivos de texto
+- ✅ **Reproducir videos** automáticamente con VLC
+- ✅ **Sistema de protección**: Solo acceso a YouTube (no a Gmail)
+- ✅ **Rate limiting** configurable
 
-Este bot está diseñado para **proteger tu cuenta de Google** usando OAuth2 con **scopes limitados**:
+## 🚀 Inicio Rápido
 
-- ✅ **Solo solicita acceso a YouTube API** (`youtube.force-ssl`)
-- ❌ **NO solicita acceso a email/Gmail**
-- ❌ **NO puede acceder a tu bandeja de entrada**
-- ✅ **Los tokens solo permiten acciones en YouTube**
+### 1. Instalar Dependencias
 
-### Cómo Funciona la Protección
-
-1. **Scopes Limitados**: El bot solo solicita el permiso `https://www.googleapis.com/auth/youtube.force-ssl`, que permite comentar y gestionar comentarios en YouTube, pero **NO** da acceso a Gmail o email.
-
-2. **Tokens OAuth2**: Los tokens generados solo tienen los permisos solicitados. Incluso si alguien obtiene el token, solo podrá usarlo para acciones en YouTube, no para acceder al email.
-
-3. **Verificación en Autorización**: Cuando autorizas la aplicación, Google te muestra exactamente qué permisos se están solicitando. Puedes verificar que solo se pide acceso a YouTube.
-
-## 📋 Requisitos
-
-- Python 3.8 o superior
-- FFmpeg instalado en el sistema (para conversión de audio a MP3)
-  - Windows: Descargar de [ffmpeg.org](https://ffmpeg.org/download.html) y agregar al PATH
-  - Linux: `sudo apt install ffmpeg` o `sudo yum install ffmpeg`
-  - macOS: `brew install ffmpeg`
-- Cuenta de Google con acceso a YouTube (solo para funciones de comentarios)
-- Proyecto en Google Cloud Console con YouTube Data API v3 habilitada (solo para comentarios)
-- Credenciales OAuth2 (Client ID y Client Secret) - solo para comentarios
-
-## 🚀 Instalación
-
-1. **Clonar el repositorio**:
-```bash
-git clone <tu-repositorio>
-cd YTLikesBot
-```
-
-2. **Instalar dependencias**:
 ```bash
 pip install -r requirements.txt
 ```
 
-3. **Configurar credenciales**:
-   - Copia `env.example` a `.env`
-   - Completa con tus credenciales de Google Cloud Console:
-   ```bash
-   cp env.example .env
-   ```
+### 2. Configurar Credenciales OAuth2
 
-4. **Editar `.env`** con tus credenciales:
-```env
-GOOGLE_CLIENT_ID=tu_client_id_aqui
-GOOGLE_CLIENT_SECRET=tu_client_secret_aqui
-REDIRECT_URI=http://localhost:8080
-```
-
-## 🔧 Configuración de Google Cloud Console
-
-1. Ve a [Google Cloud Console](https://console.cloud.google.com/)
-2. Crea un nuevo proyecto o selecciona uno existente
-3. Habilita **YouTube Data API v3**
-4. Ve a "Credenciales" → "Crear credenciales" → "ID de cliente OAuth 2.0"
-5. Selecciona "Aplicación de escritorio"
-6. Configura el redirect URI: `http://localhost:8080`
-7. Descarga las credenciales y cópialas a tu archivo `.env`
-
-### ⚠️ IMPORTANTE: Configuración de Scopes
-
-Asegúrate de que en Google Cloud Console **NO** habilites:
-- Gmail API
-- Google Mail API
-- Cualquier servicio relacionado con email
-
-Solo habilita **YouTube Data API v3**.
-
-## 📝 Uso
-
-### ⚠️ ADVERTENCIA LEGAL
-
-**Descargar videos y audio de YouTube puede violar los Términos de Servicio de YouTube y leyes de derechos de autor.** Usa esta funcionalidad solo para:
-- Contenido de dominio público
-- Videos propios
-- Contenido con permiso explícito del creador
-- Uso educativo/personal (según las leyes de tu país)
-
-### Descargar Video MP4
+**Cada usuario usa su propia cuenta de Google para comentar.**
 
 ```bash
-python main.py --download-video "https://www.youtube.com/watch?v=VIDEO_ID"
+py setup.py
 ```
 
-Con calidad específica:
-```bash
-python main.py --download-video "URL" --video-quality best
-```
+O manualmente: copia `env.example` a `.env` y completa tus credenciales.
 
-### Descargar Audio MP3
+### 3. Autorizar con tu Cuenta Personal
 
 ```bash
-python main.py --download-audio "https://www.youtube.com/watch?v=VIDEO_ID"
+py main.py --stats VIDEO_ID
 ```
 
-Con calidad específica (kbps):
-```bash
-python main.py --download-audio "URL" --audio-quality 320
-```
+Se abrirá el navegador para que autorices con tu cuenta personal de Google.
 
-### Descargar Video y Audio
+## 📋 Comandos Disponibles
 
-```bash
-python main.py --download-both "https://www.youtube.com/watch?v=VIDEO_ID"
-```
-
-### Ver Información de un Video
+### Comentar
 
 ```bash
-python main.py --info "https://www.youtube.com/watch?v=VIDEO_ID"
+# Con URL completa
+py main.py --video-id "https://www.youtube.com/watch?v=VIDEO_ID" --comment "Tu comentario"
+
+# Con solo el ID
+py main.py --video-id VIDEO_ID --comment "Tu comentario"
 ```
 
-Muestra título, canal, duración, vistas, etc. sin descargar.
-
-### Comentar en un video
+### Descargar
 
 ```bash
-python main.py --video-id dQw4w9WgXcQ --comment "¡Excelente video!"
+# Descargar video MP4
+py main.py --download-video "https://www.youtube.com/watch?v=VIDEO_ID"
+
+# Descargar audio MP3
+py main.py --download-audio "https://www.youtube.com/watch?v=VIDEO_ID"
+
+# Descargar ambos
+py main.py --download-both "https://www.youtube.com/watch?v=VIDEO_ID"
 ```
 
-### Obtener comentarios de un video
+### Reproducir con VLC
 
 ```bash
-python main.py --video-id dQw4w9WgXcQ --get-comments
+# Reproducir desde URL
+py main.py --play "https://www.youtube.com/watch?v=VIDEO_ID"
+
+# Reproducir archivo local
+py main.py --play "ruta/al/video.mp4"
+
+# Pantalla completa
+py main.py --play "URL" --play-fullscreen
+
+# Descargar y reproducir automáticamente
+py main.py --download-and-play "https://www.youtube.com/watch?v=VIDEO_ID"
 ```
 
-### Activar moderación automática
+### Estadísticas y Comentarios
 
 ```bash
-python main.py --video-id dQw4w9WgXcQ --comment "Comentario" --moderate
-```
+# Ver estadísticas
+py main.py --stats VIDEO_ID
 
-### Monitoreo continuo
+# Ver comentarios destacados
+py main.py --top-comments VIDEO_ID
 
-```bash
-python main.py --monitor --video-id dQw4w9WgXcQ
-```
+# Exportar comentarios
+py main.py --export-comments VIDEO_ID
 
-### Modo interactivo
-
-```bash
-python main.py
-```
-
-El modo interactivo te permite elegir entre todas las opciones disponibles.
-
-## 🛡️ Sistema de Moderación Automática
-
-El bot incluye un sistema de moderación que puede eliminar automáticamente comentarios que violen reglas éticas.
-
-### Configurar Reglas Éticas
-
-1. Copia `ethics_rules.json.example` a `ethics_rules.json`:
-```bash
-cp ethics_rules.json.example ethics_rules.json
-```
-
-2. Edita `ethics_rules.json` con tus reglas:
-```json
-{
-  "ethics_rules": {
-    "banned_words": ["palabra1", "palabra2"],
-    "banned_patterns": [".*spam.*"],
-    "max_length": 500,
-    "min_length": 10,
-    "auto_delete": true
-  }
-}
-```
-
-### Cómo Funciona
-
-1. El bot monitorea comentarios periódicamente
-2. Analiza cada comentario contra las reglas éticas
-3. Si detecta una violación, elimina el comentario automáticamente
-4. Registra todas las acciones en `moderation_logs.json`
-
-## 📁 Estructura del Proyecto
-
-```
-YTLikesBot/
-├── main.py                 # Script principal
-├── youtube_client.py       # Cliente de YouTube API (comentarios)
-├── downloader.py          # Descargador de videos y audio
-├── moderator.py           # Sistema de moderación
-├── content_analyzer.py    # Analizador de contenido
-├── config.py              # Configuración
-├── requirements.txt       # Dependencias
-├── .env                   # Credenciales (NO subir a GitHub)
-├── token.json             # Token OAuth2 (NO subir a GitHub)
-├── ethics_rules.json      # Reglas éticas (personalizar)
-├── downloads/             # Carpeta de descargas (creada automáticamente)
-│   ├── videos/           # Videos MP4 descargados
-│   └── audio/            # Audios MP3 descargados
-└── README.md              # Este archivo
+# Exportar en formato grep
+py main.py --export-comments VIDEO_ID --grep-format
 ```
 
 ## 🔐 Seguridad
 
-### Archivos que NUNCA deben subirse a GitHub:
+- ✅ Solo solicita acceso a YouTube API
+- ✅ NO tiene acceso a Gmail/email
+- ✅ Tokens guardados localmente en tu computadora
+- ✅ Cada usuario autoriza con su propia cuenta
 
-- `.env` (credenciales)
-- `token.json` (tokens OAuth2)
-- `credentials.json` (credenciales de Google)
-- `moderation_logs.json` (puede contener información sensible)
+## 📖 Documentación
 
-### Archivos que SÍ deben estar en GitHub:
+- `QUICK_START.md` - Guía de inicio rápido
+- `PRUEBA_COMENTAR.md` - Cómo probar la funcionalidad de comentar
+- `GUIA_GOOGLE_CLOUD_NUEVA_INTERFAZ.md` - Configurar Google Cloud Console
+- `SOLUCION_ERROR_403.md` - Solucionar error 403
+- `MULTI_ACCOUNT.md` - Sistema multi-cuenta (opcional)
 
-- `env.example` (plantilla sin credenciales)
-- `ethics_rules.json.example` (plantilla de reglas)
-- Todo el código fuente
-- `README.md`
+## ⚙️ Configuración
 
-## ⚠️ Advertencias
+### Archivo `.env`
 
-1. **Uso Responsable**: Este bot es para uso educativo/testing. No uses para spam o manipulación de métricas.
+```env
+GOOGLE_CLIENT_ID=tu_client_id
+GOOGLE_CLIENT_SECRET=tu_client_secret
+REDIRECT_URI=http://localhost:8080
 
-2. **Descarga de Contenido**: 
-   - Descargar videos/audio puede violar los Términos de Servicio de YouTube
-   - Puede violar leyes de derechos de autor
-   - Usa solo para contenido con permiso o de dominio público
-   - El desarrollador no se hace responsable del uso indebido
+# Rate limiting
+MAX_COMMENTS_PER_DAY=50
+MAX_COMMENTS_PER_HOUR=10
+```
 
-3. **Políticas de YouTube**: Cualquier uso que viole las políticas de YouTube puede resultar en suspensión de cuenta.
+### Obtener Credenciales OAuth2
 
-4. **Cuota de API**: Google tiene límites de cuota diaria. Respeta estos límites.
+1. Ve a [Google Cloud Console](https://console.cloud.google.com/)
+2. Crea un proyecto
+3. Habilita "YouTube Data API v3"
+4. Configura OAuth Consent Screen:
+   - User Type: External
+   - Scopes: SOLO `youtube.force-ssl`
+   - Agrega tu email como Test User
+5. Crea credenciales OAuth2:
+   - Application type: Desktop app
+6. Copia Client ID y Client Secret
 
-5. **Cuentas Compartidas**: Aunque técnicamente es posible compartir credenciales, NO es recomendable por seguridad.
+## 🎮 Modo Interactivo
 
-6. **FFmpeg Requerido**: Para convertir audio a MP3 necesitas FFmpeg instalado en tu sistema.
+```bash
+py main.py
+```
+
+Menú interactivo con todas las opciones disponibles.
+
+## 📝 Notas Importantes
+
+- **Cada usuario usa su propia cuenta**: No necesitas cuentas colectivas
+- **Primera autorización**: Se abre el navegador una vez
+- **Límites**: 50 comentarios/día, 10/hora (configurable)
+- **Tokens**: Se guardan en `token.json` (no subir a GitHub)
+
+## 🐛 Troubleshooting
+
+### Error 403: access_denied
+- Agrega tu email como Test User en OAuth Consent Screen
+- Lee `SOLUCION_ERROR_403.md`
+
+### VLC no se abre
+- Instala VLC desde https://www.videolan.org/vlc/
+- Verifica que esté en el PATH
+
+### Error de credenciales
+- Verifica que `.env` tenga las credenciales correctas
+- Ejecuta `py setup.py` para reconfigurar
 
 ## 📄 Licencia
 
-[Especificar licencia]
-
-## 🤝 Contribuciones
-
-Las contribuciones son bienvenidas. Por favor:
-1. Fork el proyecto
-2. Crea una rama para tu feature
-3. Commit tus cambios
-4. Push a la rama
-5. Abre un Pull Request
-
-## 📞 Soporte
-
-Para problemas o preguntas, abre un issue en el repositorio.
-
-## 📦 Archivos Descargados
-
-Los videos y audios se guardan en:
-- Videos MP4: `downloads/videos/`
-- Audios MP3: `downloads/audio/`
-
-Estas carpetas se crean automáticamente al ejecutar el bot.
-
-## 🔧 Configuración de Descargas
-
-Puedes configurar la calidad y ubicación de descargas en `config.py` o mediante variables de entorno en `.env`:
-
-```env
-DOWNLOAD_DIR=downloads          # Carpeta base de descargas
-VIDEO_QUALITY=best              # best o worst
-AUDIO_QUALITY=192                # Calidad en kbps (128, 192, 256, 320)
-```
-
----
-
-**Recuerda**: Este bot solo solicita permisos de YouTube para comentar. Tu email está protegido. 🛡️
-
-**Advertencia**: Descargar contenido puede violar términos de servicio y leyes de derechos de autor. Usa responsablemente. ⚖️
+Este proyecto es de código abierto. Úsalo responsablemente y respeta los términos de servicio de YouTube.

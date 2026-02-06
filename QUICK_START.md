@@ -8,7 +8,9 @@
 pip install -r requirements.txt
 ```
 
-### Paso 2: Configurar Credenciales (Solo si quieres usar funciones de comentarios/estadísticas)
+### Paso 2: Configurar Credenciales OAuth2 (Una sola vez)
+
+**Cada usuario usa su propia cuenta de Google para comentar.**
 
 Ejecuta el script de configuración interactiva:
 
@@ -16,10 +18,9 @@ Ejecuta el script de configuración interactiva:
 py setup.py
 ```
 
-El script te guiará paso a paso para:
-- Ingresar tus credenciales OAuth2 de Google Cloud Console
+El script te guiará para:
+- Ingresar credenciales OAuth2 de Google Cloud Console
 - Configurar límites de rate limiting
-- Activar protección de cuenta colectiva
 
 **O manualmente:**
 
@@ -34,7 +35,10 @@ GOOGLE_CLIENT_ID=tu_client_id_aqui
 GOOGLE_CLIENT_SECRET=tu_client_secret_aqui
 ```
 
-### Paso 3: Autorizar (Solo primera vez)
+**📝 Nota**: Las credenciales OAuth2 son del proyecto en Google Cloud Console.
+Cada usuario autoriza con su propia cuenta de Google.
+
+### Paso 3: Autorizar con tu Cuenta Personal (Primera vez)
 
 Ejecuta cualquier comando que requiera autenticación:
 
@@ -43,8 +47,9 @@ py main.py --stats dQw4w9WgXcQ
 ```
 
 - Se abrirá tu navegador
-- Inicia sesión con tu cuenta de Google
+- **Inicia sesión con tu cuenta personal de Google**
 - Autoriza la aplicación
+- El token se guarda en `token.json` (solo en tu computadora)
 - ¡Listo!
 
 ## Funciones que NO Requieren Configuración

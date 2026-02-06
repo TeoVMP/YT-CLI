@@ -88,10 +88,12 @@ class YouTubeClient:
                 print("AUTENTICACIÓN REQUERIDA")
                 print("="*60)
                 print("Se abrirá tu navegador para autorizar la aplicación.")
+                print("\n📝 INICIA SESIÓN CON TU CUENTA PERSONAL DE GOOGLE")
                 print("\nIMPORTANTE:")
                 print("- Solo se solicita acceso a YouTube (comentar)")
                 print("- NO se solicita acceso a tu email/Gmail")
                 print("- Puedes verificar los permisos antes de autorizar")
+                print("- El token se guarda localmente en tu computadora")
                 print("="*60 + "\n")
                 
                 creds = flow.run_local_server(port=8080)
