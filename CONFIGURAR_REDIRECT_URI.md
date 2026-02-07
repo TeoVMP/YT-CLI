@@ -18,16 +18,61 @@
 1. En la lista de credenciales, busca tu **OAuth 2.0 Client ID**
    - Debería tener un nombre como "YouTube Bot Desktop" o similar
    - O busca el Client ID que empieza con: `173177570700-...`
+   - **IMPORTANTE**: Debe ser tipo "OAuth 2.0 Client ID", NO "API Key"
 2. **Haz clic en el nombre** del OAuth 2.0 Client ID para editarlo
 
-### Paso 4: Configurar Authorized redirect URIs
+### Paso 4: Verificar el Tipo de Aplicación
+
+1. En la página de edición, busca la sección **"Application type"** (Tipo de aplicación)
+2. Debe estar configurado como **"Desktop app"** (Aplicación de escritorio)
+3. Si NO está como "Desktop app":
+   - ⚠️ **PROBLEMA**: Necesitas crear un nuevo OAuth 2.0 Client ID
+   - Ve a la sección "Crear Nuevo OAuth 2.0 Client ID" más abajo
+
+### Paso 5: Configurar Authorized redirect URIs
+
+**Si el tipo es "Desktop app":**
 
 1. En la página de edición, busca la sección **"Authorized redirect URIs"** (URIs de redirección autorizados)
-2. Haz clic en **"+ ADD URI"** o en el botón de agregar
-3. En el campo que aparece, escribe **EXACTAMENTE**:
+   - Esta sección puede estar más abajo en la página
+   - O puede estar en una pestaña/separador
+2. Si NO ves esta sección:
+   - El OAuth 2.0 Client ID puede estar configurado como "Web application" en lugar de "Desktop app"
+   - Necesitas crear uno nuevo (ver sección abajo)
+
+3. Si SÍ ves la sección:
+   - Haz clic en **"+ ADD URI"** o en el botón de agregar
+   - En el campo que aparece, escribe **EXACTAMENTE**:
+     ```
+     http://localhost:8080
+     ```
+
+### ⚠️ Si NO encuentras "Authorized redirect URIs"
+
+**Esto significa que tu OAuth 2.0 Client ID está configurado como "Web application" en lugar de "Desktop app".**
+
+**Solución: Crear un nuevo OAuth 2.0 Client ID**
+
+1. En la página de Credentials, haz clic en **"+ CREATE CREDENTIALS"** (Crear credenciales)
+2. Selecciona **"OAuth client ID"**
+3. Si te pide configurar el OAuth consent screen primero:
+   - Haz clic en "CONFIGURE CONSENT SCREEN"
+   - Selecciona "External" (Externo)
+   - Completa los campos requeridos (App name, User support email)
+   - En "Scopes", agrega: `https://www.googleapis.com/auth/youtube.force-ssl`
+   - Agrega tu email como "Test user"
+   - Guarda y continúa
+4. En "Application type", selecciona **"Desktop app"** (NO "Web application")
+5. Dale un nombre, por ejemplo: "YouTube Bot Desktop"
+6. Haz clic en **"CREATE"** (Crear)
+7. **IMPORTANTE**: Copia el nuevo Client ID y Client Secret
+8. Actualiza tu archivo `.env` con estos nuevos valores:
    ```
-   http://localhost:8080
+   GOOGLE_CLIENT_ID=tu_nuevo_client_id
+   GOOGLE_CLIENT_SECRET=tu_nuevo_client_secret
    ```
+9. Para "Desktop app", el redirect_uri `http://localhost:8080` se configura automáticamente
+   - Pero puedes agregarlo manualmente si es necesario
    ⚠️ **IMPORTANTE:**
    - Debe ser `http://` (NO `https://`)
    - Debe ser `localhost` (NO `127.0.0.1`)
