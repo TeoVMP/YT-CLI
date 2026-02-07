@@ -102,37 +102,80 @@ class YouTubeClient:
                     print("   1. Se mostrará una URL - cópiala")
                     print("   2. Ábrela en tu navegador móvil")
                     print("   3. Inicia sesión y autoriza")
-                    print("   4. Copia el código de autorización de la URL")
-                    print("   5. Pégalo aquí\n")
+                    print("   4. Después de autorizar, verás un error de conexión (ES NORMAL)")
+                    print("   5. Copia TODA la URL completa de la barra de direcciones")
+                    print("   6. Pégalo aquí (el código está en la URL)\n")
                     print("="*60 + "\n")
                     
-                    # En Termux, mostrar URL manualmente y pedir código
-                    # Asegurar que redirect_uri esté incluido explícitamente
-                    auth_url, state = flow.authorization_url(
+                    # En Termux, usar redirect_uri especial para móviles
+                    # Usar 'urn:ietf:wg:oauth:2.0:oob' que funciona sin servidor local
+                    mobile_redirect_uri = 'urn:ietf:wg:oauth:2.0:oob'
+                    
+                    # Crear flow con redirect_uri para móviles
+                    flow_mobile = InstalledAppFlow.from_client_config(
+                        {
+                            "installed": {
+                                "client_id": config.CLIENT_ID,
+                                "client_secret": config.CLIENT_SECRET,
+                                "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                                "token_uri": "https://oauth2.googleapis.com/token",
+                                "redirect_uris": [mobile_redirect_uri, config.REDIRECT_URI]
+                            }
+                        },
+                        config.YOUTUBE_SCOPES
+                    )
+                    
+                    auth_url, state = flow_mobile.authorization_url(
                         prompt='consent',
                         access_type='offline',
                         include_granted_scopes='true'
                     )
                     
-                    # Verificar que redirect_uri esté en la URL
-                    if 'redirect_uri' not in auth_url:
-                        # Agregar redirect_uri manualmente si falta
-                        from urllib.parse import urlencode, parse_qs, urlparse, urlunparse
-                        parsed = urlparse(auth_url)
-                        params = parse_qs(parsed.query)
-                        params['redirect_uri'] = [config.REDIRECT_URI]
-                        new_query = urlencode(params, doseq=True)
-                        auth_url = urlunparse(parsed._replace(query=new_query))
-                    
                     print(f"\n📋 Por favor, visita esta URL en tu navegador:")
                     print(f"\n{auth_url}\n")
-                    print("Después de autorizar, copia el código de la URL (el parámetro 'code=...')")
-                    print(f"\n💡 Redirect URI configurado: {config.REDIRECT_URI}")
-                    print("   ⚠️  IMPORTANTE: Asegúrate de que este URI esté configurado en Google Cloud Console")
-                    print("   Ve a: APIs & Services > Credentials > Tu OAuth 2.0 Client ID")
-                    print("   Y agrega este URI en 'Authorized redirect URIs'")
-                    code = input("\nIngresa el código de autorización: ").strip()
-                    creds = flow.fetch_token(code=code)
+                    print("⚠️  IMPORTANTE:")
+                    print("   - Después de autorizar, verás un error 'This site can't be reached'")
+                    print("   - Esto es NORMAL en móviles/Termux")
+                    print("   - Copia TODA la URL de la barra de direcciones")
+                    print("   - La URL contiene el código de autorización")
+                    print("\n💡 Ejemplo de URL a copiar:")
+                    print("   http://localhost:8080/?code=4/0AeanS...&scope=...")
+                    print("   O")
+                    print("   urn:ietf:wg:oauth:2.0:oob?code=4/0AeanS...")
+                    
+                    # Pedir la URL completa o solo el código
+                    user_input = input("\n📋 Pega la URL completa o solo el código: ").strip()
+                    
+                    # Extraer el código de la URL si el usuario pegó la URL completa
+                    if 'code=' in user_input:
+                        from urllib.parse import urlparse, parse_qs
+                        # Si es una URL completa, extraer el código
+                        if user_input.startswith('http://') or user_input.startswith('https://') or user_input.startswith('urn:'):
+                            parsed = urlparse(user_input)
+                            params = parse_qs(parsed.query)
+                            if 'code' in params:
+                                code = params['code'][0]
+                            else:
+                                # Intentar extraer de fragmento
+                                if '#' in user_input:
+                                    fragment = user_input.split('#')[1]
+                                    fragment_params = parse_qs(fragment)
+                                    if 'code' in fragment_params:
+                                        code = fragment_params['code'][0]
+                                    else:
+                                        code = user_input
+                                else:
+                                    code = user_input
+                        else:
+                            code = user_input
+                    else:
+                        code = user_input
+                    
+                    # Limpiar el código (remover espacios, saltos de línea, etc.)
+                    code = code.strip().replace('\n', '').replace('\r', '')
+                    
+                    print(f"\n🔑 Código extraído: {code[:20]}...")
+                    creds = flow_mobile.fetch_token(code=code)
                 else:
                     print("🌐 Se abrirá tu navegador automáticamente...")
                     print("   Si no se abre, copia la URL que aparecerá.\n")
