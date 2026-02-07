@@ -268,7 +268,7 @@ class YouTubeClient:
                     if response.status_code == 200:
                         token_info = response.json()
                         # Crear credenciales desde el token
-                        from google.oauth2.credentials import Credentials
+                        # Credentials ya está importado al inicio del archivo
                         creds = Credentials(
                             token=token_info.get('access_token'),
                             refresh_token=token_info.get('refresh_token'),

@@ -36,3 +36,32 @@ def extract_video_id(url_or_id: str) -> Optional[str]:
         return match.group(1)
     
     return None
+
+
+def extract_playlist_id(url_or_id: str) -> Optional[str]:
+    """
+    Extrae el ID de la playlist de una URL de YouTube o retorna el ID si ya es un ID.
+    
+    Args:
+        url_or_id: URL de YouTube con parámetro list= o ID de la playlist
+        
+    Returns:
+        str: ID de la playlist o None si no se puede extraer
+    """
+    # Si ya es un ID de playlist (empieza con PL y tiene ~34 caracteres)
+    if re.match(r'^PL[a-zA-Z0-9_-]{32}$', url_or_id):
+        return url_or_id
+    
+    # Patrones comunes de URLs de YouTube con playlist
+    patterns = [
+        r'[?&]list=([a-zA-Z0-9_-]{34})',  # list=PL...
+        r'youtube\.com\/playlist\?list=([a-zA-Z0-9_-]{34})',  # youtube.com/playlist?list=PL...
+        r'youtube\.com\/watch\?.*list=([a-zA-Z0-9_-]{34})',  # youtube.com/watch?v=...&list=PL...
+    ]
+    
+    for pattern in patterns:
+        match = re.search(pattern, url_or_id)
+        if match:
+            return match.group(1)
+    
+    return None

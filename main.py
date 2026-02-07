@@ -791,8 +791,19 @@ Ejemplos de uso:
                 sys.exit(1)
             
             # Obtener videos de la playlist
-            print(f"📋 Obteniendo videos de la playlist: {args.play_playlist}")
-            videos = youtube_client.get_playlist_videos(args.play_playlist, max_results=100)
+            # Extraer ID de la playlist de la URL si es necesario
+            from utils import extract_playlist_id
+            playlist_id = extract_playlist_id(args.play_playlist)
+            
+            if not playlist_id:
+                print(f"✗ No se pudo extraer el ID de la playlist de: {args.play_playlist}")
+                print("   Asegúrate de usar una URL válida de YouTube con parámetro list= o un ID de playlist (PL...).")
+                print("   Ejemplo: https://www.youtube.com/watch?v=VIDEO_ID&list=PL...")
+                print("   O simplemente: PL...")
+                sys.exit(1)
+            
+            print(f"📋 Obteniendo videos de la playlist: {playlist_id}")
+            videos = youtube_client.get_playlist_videos(playlist_id, max_results=100)
             
             if not videos:
                 print("✗ No se encontraron videos en la playlist o la playlist no existe.")
