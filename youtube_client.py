@@ -107,10 +107,30 @@ class YouTubeClient:
                     print("="*60 + "\n")
                     
                     # En Termux, mostrar URL manualmente y pedir código
-                    auth_url, _ = flow.authorization_url(prompt='consent')
+                    # Asegurar que redirect_uri esté incluido explícitamente
+                    auth_url, state = flow.authorization_url(
+                        prompt='consent',
+                        access_type='offline',
+                        include_granted_scopes='true'
+                    )
+                    
+                    # Verificar que redirect_uri esté en la URL
+                    if 'redirect_uri' not in auth_url:
+                        # Agregar redirect_uri manualmente si falta
+                        from urllib.parse import urlencode, parse_qs, urlparse, urlunparse
+                        parsed = urlparse(auth_url)
+                        params = parse_qs(parsed.query)
+                        params['redirect_uri'] = [config.REDIRECT_URI]
+                        new_query = urlencode(params, doseq=True)
+                        auth_url = urlunparse(parsed._replace(query=new_query))
+                    
                     print(f"\n📋 Por favor, visita esta URL en tu navegador:")
                     print(f"\n{auth_url}\n")
                     print("Después de autorizar, copia el código de la URL (el parámetro 'code=...')")
+                    print(f"\n💡 Redirect URI configurado: {config.REDIRECT_URI}")
+                    print("   ⚠️  IMPORTANTE: Asegúrate de que este URI esté configurado en Google Cloud Console")
+                    print("   Ve a: APIs & Services > Credentials > Tu OAuth 2.0 Client ID")
+                    print("   Y agrega este URI en 'Authorized redirect URIs'")
                     code = input("\nIngresa el código de autorización: ").strip()
                     creds = flow.fetch_token(code=code)
                 else:
@@ -257,7 +277,6 @@ class YouTubeClient:
             # Para búsqueda, priorizar API key (sin autenticación)
             # Si no hay API key, intentar usar OAuth2 solo si ya hay token guardado (sin forzar login)
             if config.API_KEY:
-                from googleapiclient.discovery import build
                 service = build(
                     config.API_SERVICE_NAME,
                     config.API_VERSION,
