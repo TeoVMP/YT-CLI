@@ -108,8 +108,15 @@ class YouTubeClient:
                     print("="*60 + "\n")
                     
                     # En Termux, usar redirect_uri que esté configurado en Google Cloud Console
-                    # Primero intentar con el redirect_uri configurado
+                    # IMPORTANTE: El redirect_uri debe estar configurado en Google Cloud Console
                     redirect_uri_to_use = config.REDIRECT_URI
+                    
+                    print(f"\n⚠️  CONFIGURACIÓN REQUERIDA EN GOOGLE CLOUD CONSOLE:")
+                    print(f"   El redirect_uri '{redirect_uri_to_use}' DEBE estar configurado en:")
+                    print(f"   https://console.cloud.google.com/apis/credentials")
+                    print(f"   > Tu OAuth 2.0 Client ID > Authorized redirect URIs")
+                    print(f"   Debe ser EXACTAMENTE: {redirect_uri_to_use}")
+                    print(f"   (sin espacios, sin barra final, exactamente igual)\n")
                     
                     # Crear flow con redirect_uri explícito
                     flow_mobile = InstalledAppFlow.from_client_config(
