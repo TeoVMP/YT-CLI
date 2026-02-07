@@ -187,7 +187,45 @@ class YouTubeClient:
                     code = code.strip().replace('\n', '').replace('\r', '')
                     
                     print(f"\n🔑 Código extraído: {code[:20]}...")
-                    creds = flow_mobile.fetch_token(code=code)
+                    print(f"🔗 Usando redirect_uri: {redirect_uri_to_use}")
+                    
+                    # Intercambiar código por token, asegurando que redirect_uri esté incluido
+                    try:
+                        creds = flow_mobile.fetch_token(code=code)
+                    except Exception as e:
+                        # Si falla, intentar con redirect_uri explícito usando requests directamente
+                        error_msg = str(e)
+                        if 'redirect_uri' in error_msg.lower() or 'invalid_request' in error_msg.lower():
+                            print("⚠️  Reintentando con redirect_uri explícito...")
+                            import requests
+                            
+                            token_url = 'https://oauth2.googleapis.com/token'
+                            token_data = {
+                                'code': code,
+                                'client_id': config.CLIENT_ID,
+                                'client_secret': config.CLIENT_SECRET,
+                                'redirect_uri': redirect_uri_to_use,
+                                'grant_type': 'authorization_code'
+                            }
+                            
+                            response = requests.post(token_url, data=token_data)
+                            if response.status_code == 200:
+                                token_info = response.json()
+                                # Crear credenciales desde el token
+                                from google.oauth2.credentials import Credentials
+                                creds = Credentials(
+                                    token=token_info.get('access_token'),
+                                    refresh_token=token_info.get('refresh_token'),
+                                    token_uri='https://oauth2.googleapis.com/token',
+                                    client_id=config.CLIENT_ID,
+                                    client_secret=config.CLIENT_SECRET,
+                                    scopes=config.YOUTUBE_SCOPES
+                                )
+                                print("✓ Token obtenido exitosamente")
+                            else:
+                                raise Exception(f"Error obteniendo token: {response.status_code} - {response.text}")
+                        else:
+                            raise
                 else:
                     print("🌐 Se abrirá tu navegador automáticamente...")
                     print("   Si no se abre, copia la URL que aparecerá.\n")
