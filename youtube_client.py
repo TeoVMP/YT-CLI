@@ -225,8 +225,13 @@ class YouTubeClient:
                         
                         print(f"📤 Enviando solicitud de token...")
                         print(f"   Client ID: {config.CLIENT_ID[:20]}...")
-                        print(f"   Redirect URI: {redirect_uri_to_use}")
+                        print(f"   Redirect URI: '{redirect_uri_to_use}' (longitud: {len(redirect_uri_to_use)})")
                         print(f"   Código: {code[:30]}... (longitud: {len(code)} caracteres)")
+                        print(f"\n⚠️  VERIFICACIÓN IMPORTANTE:")
+                        print(f"   Asegúrate de que '{redirect_uri_to_use}' esté configurado EXACTAMENTE")
+                        print(f"   en Google Cloud Console > APIs & Services > Credentials")
+                        print(f"   > Tu OAuth 2.0 Client ID > Authorized redirect URIs")
+                        print(f"   (debe coincidir EXACTAMENTE, sin espacios, sin barra final)\n")
                         
                         response = requests.post(token_url, data=token_data)
                         
@@ -248,12 +253,24 @@ class YouTubeClient:
                             error_detail = error_response.get('error_description', '') if isinstance(error_response, dict) else str(error_response)
                             
                             if 'invalid_grant' in str(error_response).lower():
+                                error_full = str(error_response)
                                 raise Exception(
-                                    f"Error: Código de autorización inválido o expirado.\n"
-                                    f"   - El código puede haber sido usado ya\n"
-                                    f"   - O puede haber expirado (los códigos expiran en ~10 minutos)\n"
-                                    f"   - O el redirect_uri no coincide exactamente\n\n"
-                                    f"   Solución: Vuelve a ejecutar 'python main.py --login' y copia el código inmediatamente después de autorizar."
+                                    f"Error: Código de autorización inválido o expirado.\n\n"
+                                    f"   Posibles causas:\n"
+                                    f"   1. El código ya fue usado (solo se puede usar una vez)\n"
+                                    f"   2. El código expiró (expiran en ~10 minutos)\n"
+                                    f"   3. El redirect_uri no coincide exactamente con Google Cloud Console\n"
+                                    f"      - Configurado en código: '{redirect_uri_to_use}'\n"
+                                    f"      - Debe estar en Google Cloud Console EXACTAMENTE igual\n\n"
+                                    f"   📋 Pasos para verificar:\n"
+                                    f"   1. Ve a: https://console.cloud.google.com/apis/credentials\n"
+                                    f"   2. Abre tu OAuth 2.0 Client ID\n"
+                                    f"   3. En 'Authorized redirect URIs', verifica que esté:\n"
+                                    f"      {redirect_uri_to_use}\n"
+                                    f"   4. Debe coincidir EXACTAMENTE (sin espacios, sin barra final)\n"
+                                    f"   5. Guarda los cambios y espera 2-3 minutos\n"
+                                    f"   6. Vuelve a ejecutar 'python main.py --login'\n\n"
+                                    f"   Error completo: {error_full}"
                                 )
                             else:
                                 raise Exception(f"Error obteniendo token: {response.status_code} - {error_detail}")
