@@ -204,116 +204,119 @@ class YouTubeClient:
                     
                     # Intercambiar código por token
                     # IMPORTANTE: El redirect_uri debe ser EXACTAMENTE el mismo que se usó en la URL de autorización
-                    try:
-                        # Intentar primero con el método estándar
-                        creds = flow_mobile.fetch_token(code=code)
-                    except Exception as e:
-                        # Si falla, usar método directo con requests
-                        error_msg = str(e)
-                        print("⚠️  Usando método alternativo para obtener token...")
-                        import requests
+                    # En Termux, usar directamente el método con requests para evitar problemas
+                    import requests
+                    
+                    # Usar método directo con requests (más confiable en Termux)
+                    # Verificar que el código esté completo (debe tener al menos 50 caracteres)
+                    if len(code) < 50:
+                        raise Exception(
+                            f"El código parece estar incompleto (solo {len(code)} caracteres).\n"
+                            f"   Por favor, copia la URL COMPLETA después de autorizar, no solo el código.\n"
+                            f"   El código debe tener al menos 50 caracteres."
+                        )
+                    
+                    token_url = 'https://oauth2.googleapis.com/token'
+                    
+                    # Verificar que el Client Secret esté configurado
+                    if not config.CLIENT_SECRET:
+                        raise Exception(
+                            "ERROR: GOOGLE_CLIENT_SECRET no está configurado en .env\n"
+                            "   Por favor, ejecuta 'python setup.py' para configurar las credenciales."
+                        )
+                    
+                    token_data = {
+                        'code': code,
+                        'client_id': config.CLIENT_ID,
+                        'client_secret': config.CLIENT_SECRET,
+                        'redirect_uri': redirect_uri_to_use,  # DEBE ser exactamente el mismo
+                        'grant_type': 'authorization_code'
+                    }
+                    
+                    print(f"   Client ID: {config.CLIENT_ID[:20]}...")
+                    print(f"   Client Secret: {config.CLIENT_SECRET[:10]}... (configurado)")
+                    print(f"   Redirect URI: '{redirect_uri_to_use}' (longitud: {len(redirect_uri_to_use)})")
+                    print(f"   Código: {code[:30]}... (longitud: {len(code)} caracteres)")
+                    print(f"\n⚠️  VERIFICACIÓN IMPORTANTE:")
+                    print(f"   Asegúrate de que '{redirect_uri_to_use}' esté configurado EXACTAMENTE")
+                    print(f"   en Google Cloud Console > APIs & Services > Credentials")
+                    print(f"   > Tu OAuth 2.0 Client ID > Authorized redirect URIs")
+                    print(f"   (debe coincidir EXACTAMENTE, sin espacios, sin barra final)\n")
+                    
+                    # Enviar solicitud con headers explícitos
+                    headers = {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'Accept': 'application/json'
+                    }
+                    
+                    response = requests.post(token_url, data=token_data, headers=headers)
                         
-                        # Verificar que el código esté completo (debe tener al menos 50 caracteres)
-                        if len(code) < 50:
-                            raise Exception(
-                                f"El código parece estar incompleto (solo {len(code)} caracteres).\n"
-                                f"   Por favor, copia la URL COMPLETA después de autorizar, no solo el código.\n"
-                                f"   El código debe tener al menos 50 caracteres."
-                            )
+                    # Debug: mostrar respuesta completa si falla
+                    if response.status_code != 200:
+                        print(f"\n🔍 DEBUG - Información de la solicitud:")
+                        print(f"   URL: {token_url}")
+                        print(f"   Método: POST")
+                        print(f"   Headers: {headers}")
+                        print(f"   Data enviada:")
+                        print(f"     - code: {code[:50]}...")
+                        print(f"     - client_id: {config.CLIENT_ID}")
+                        print(f"     - redirect_uri: '{redirect_uri_to_use}'")
+                        print(f"     - grant_type: authorization_code")
+                        print(f"   Status Code: {response.status_code}")
+                        print(f"   Response: {response.text[:500]}")
+                    
+                    if response.status_code == 200:
+                        token_info = response.json()
+                        # Crear credenciales desde el token
+                        from google.oauth2.credentials import Credentials
+                        creds = Credentials(
+                            token=token_info.get('access_token'),
+                            refresh_token=token_info.get('refresh_token'),
+                            token_uri='https://oauth2.googleapis.com/token',
+                            client_id=config.CLIENT_ID,
+                            client_secret=config.CLIENT_SECRET,
+                            scopes=config.YOUTUBE_SCOPES
+                        )
+                        print("✓ Token obtenido exitosamente")
+                    else:
+                        error_response = response.json() if response.headers.get('content-type', '').startswith('application/json') else response.text
+                        error_detail = error_response.get('error_description', '') if isinstance(error_response, dict) else str(error_response)
                         
-                        token_url = 'https://oauth2.googleapis.com/token'
-                        token_data = {
-                            'code': code,
-                            'client_id': config.CLIENT_ID,
-                            'client_secret': config.CLIENT_SECRET,
-                            'redirect_uri': redirect_uri_to_use,  # DEBE ser exactamente el mismo
-                            'grant_type': 'authorization_code'
-                        }
-                        
-                        print(f"📤 Enviando solicitud de token...")
-                        print(f"   Client ID: {config.CLIENT_ID[:20]}...")
-                        print(f"   Redirect URI: '{redirect_uri_to_use}' (longitud: {len(redirect_uri_to_use)})")
-                        print(f"   Código: {code[:30]}... (longitud: {len(code)} caracteres)")
-                        print(f"\n⚠️  VERIFICACIÓN IMPORTANTE:")
-                        print(f"   Asegúrate de que '{redirect_uri_to_use}' esté configurado EXACTAMENTE")
-                        print(f"   en Google Cloud Console > APIs & Services > Credentials")
-                        print(f"   > Tu OAuth 2.0 Client ID > Authorized redirect URIs")
-                        print(f"   (debe coincidir EXACTAMENTE, sin espacios, sin barra final)\n")
-                        
-                        # Enviar solicitud con headers explícitos
-                        headers = {
-                            'Content-Type': 'application/x-www-form-urlencoded',
-                            'Accept': 'application/json'
-                        }
-                        
-                        response = requests.post(token_url, data=token_data, headers=headers)
-                        
-                        # Debug: mostrar respuesta completa si falla
-                        if response.status_code != 200:
-                            print(f"\n🔍 DEBUG - Información de la solicitud:")
-                            print(f"   URL: {token_url}")
-                            print(f"   Método: POST")
-                            print(f"   Headers: {headers}")
-                            print(f"   Data enviada:")
-                            print(f"     - code: {code[:50]}...")
-                            print(f"     - client_id: {config.CLIENT_ID}")
-                            print(f"     - redirect_uri: '{redirect_uri_to_use}'")
-                            print(f"     - grant_type: authorization_code")
-                            print(f"   Status Code: {response.status_code}")
-                            print(f"   Response: {response.text[:500]}")
-                        
-                        if response.status_code == 200:
-                            token_info = response.json()
-                            # Crear credenciales desde el token
-                            from google.oauth2.credentials import Credentials
-                            creds = Credentials(
-                                token=token_info.get('access_token'),
-                                refresh_token=token_info.get('refresh_token'),
-                                token_uri='https://oauth2.googleapis.com/token',
-                                client_id=config.CLIENT_ID,
-                                client_secret=config.CLIENT_SECRET,
-                                scopes=config.YOUTUBE_SCOPES
-                            )
-                            print("✓ Token obtenido exitosamente")
-                        else:
-                            error_response = response.json() if response.headers.get('content-type', '').startswith('application/json') else response.text
-                            error_detail = error_response.get('error_description', '') if isinstance(error_response, dict) else str(error_response)
+                        if 'invalid_grant' in str(error_response).lower():
+                            error_full = str(error_response)
                             
-                            if 'invalid_grant' in str(error_response).lower():
-                                error_full = str(error_response)
-                                
-                                # Mensaje más específico basado en el error
-                                print(f"\n❌ ERROR: invalid_grant - Bad Request\n")
-                                print(f"🔍 DIAGNÓSTICO:")
-                                print(f"   Este error generalmente significa que:")
-                                print(f"   1. El redirect_uri NO está configurado en Google Cloud Console")
-                                print(f"   2. O el redirect_uri no coincide EXACTAMENTE")
-                                print(f"   3. O el código ya fue usado/expirado\n")
-                                
-                                print(f"📋 SOLUCIÓN PASO A PASO:")
-                                print(f"   1. Ve a: https://console.cloud.google.com/apis/credentials")
-                                print(f"   2. Busca tu OAuth 2.0 Client ID:")
-                                print(f"      {config.CLIENT_ID[:30]}...")
-                                print(f"   3. Haz clic en el nombre para editarlo")
-                                print(f"   4. Verifica el 'Application type':")
-                                print(f"      - Si es 'Web application': Busca 'Authorized redirect URIs'")
-                                print(f"      - Si es 'Desktop app': No necesita redirect_uri manual")
-                                print(f"   5. Si es 'Web application', en 'Authorized redirect URIs':")
-                                print(f"      - Haz clic en '+ ADD URI' o '+ AGREGAR URI'")
-                                print(f"      - Escribe EXACTAMENTE: {redirect_uri_to_use}")
-                                print(f"      - Sin espacios, sin barra final, exactamente igual")
-                                print(f"   6. Haz clic en 'SAVE' o 'GUARDAR'")
-                                print(f"   7. Espera 2-3 minutos para que se apliquen los cambios")
-                                print(f"   8. Vuelve a ejecutar: python main.py --login")
-                                print(f"   9. IMPORTANTE: Copia el código INMEDIATAMENTE después de autorizar")
-                                print(f"      (los códigos expiran en ~10 minutos y solo se pueden usar una vez)\n")
-                                
-                                raise Exception(
-                                    f"Error: invalid_grant - Bad Request\n\n"
-                                    f"   El redirect_uri '{redirect_uri_to_use}' probablemente NO está configurado\n"
-                                    f"   en Google Cloud Console, o no coincide exactamente.\n\n"
-                                    f"   Sigue los pasos de diagnóstico mostrados arriba."
-                                )
+                            # Mensaje más específico basado en el error
+                            print(f"\n❌ ERROR: invalid_grant - Bad Request\n")
+                            print(f"🔍 DIAGNÓSTICO:")
+                            print(f"   Este error generalmente significa que:")
+                            print(f"   1. El redirect_uri NO está configurado en Google Cloud Console")
+                            print(f"   2. O el redirect_uri no coincide EXACTAMENTE")
+                            print(f"   3. O el código ya fue usado/expirado\n")
+                            
+                            print(f"📋 SOLUCIÓN PASO A PASO:")
+                            print(f"   1. Ve a: https://console.cloud.google.com/apis/credentials")
+                            print(f"   2. Busca tu OAuth 2.0 Client ID:")
+                            print(f"      {config.CLIENT_ID[:30]}...")
+                            print(f"   3. Haz clic en el nombre para editarlo")
+                            print(f"   4. Verifica el 'Application type':")
+                            print(f"      - Si es 'Web application': Busca 'Authorized redirect URIs'")
+                            print(f"      - Si es 'Desktop app': No necesita redirect_uri manual")
+                            print(f"   5. Si es 'Web application', en 'Authorized redirect URIs':")
+                            print(f"      - Haz clic en '+ ADD URI' o '+ AGREGAR URI'")
+                            print(f"      - Escribe EXACTAMENTE: {redirect_uri_to_use}")
+                            print(f"      - Sin espacios, sin barra final, exactamente igual")
+                            print(f"   6. Haz clic en 'SAVE' o 'GUARDAR'")
+                            print(f"   7. Espera 2-3 minutos para que se apliquen los cambios")
+                            print(f"   8. Vuelve a ejecutar: python main.py --login")
+                            print(f"   9. IMPORTANTE: Copia el código INMEDIATAMENTE después de autorizar")
+                            print(f"      (los códigos expiran en ~10 minutos y solo se pueden usar una vez)\n")
+                            
+                            raise Exception(
+                                f"Error: invalid_grant - Bad Request\n\n"
+                                f"   El redirect_uri '{redirect_uri_to_use}' probablemente NO está configurado\n"
+                                f"   en Google Cloud Console, o no coincide exactamente.\n\n"
+                                f"   Sigue los pasos de diagnóstico mostrados arriba."
+                            )
                             else:
                                 raise Exception(f"Error obteniendo token: {response.status_code} - {error_detail}")
                 else:
