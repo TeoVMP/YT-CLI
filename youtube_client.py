@@ -281,23 +281,38 @@ class YouTubeClient:
                             
                             if 'invalid_grant' in str(error_response).lower():
                                 error_full = str(error_response)
+                                
+                                # Mensaje más específico basado en el error
+                                print(f"\n❌ ERROR: invalid_grant - Bad Request\n")
+                                print(f"🔍 DIAGNÓSTICO:")
+                                print(f"   Este error generalmente significa que:")
+                                print(f"   1. El redirect_uri NO está configurado en Google Cloud Console")
+                                print(f"   2. O el redirect_uri no coincide EXACTAMENTE")
+                                print(f"   3. O el código ya fue usado/expirado\n")
+                                
+                                print(f"📋 SOLUCIÓN PASO A PASO:")
+                                print(f"   1. Ve a: https://console.cloud.google.com/apis/credentials")
+                                print(f"   2. Busca tu OAuth 2.0 Client ID:")
+                                print(f"      {config.CLIENT_ID[:30]}...")
+                                print(f"   3. Haz clic en el nombre para editarlo")
+                                print(f"   4. Verifica el 'Application type':")
+                                print(f"      - Si es 'Web application': Busca 'Authorized redirect URIs'")
+                                print(f"      - Si es 'Desktop app': No necesita redirect_uri manual")
+                                print(f"   5. Si es 'Web application', en 'Authorized redirect URIs':")
+                                print(f"      - Haz clic en '+ ADD URI' o '+ AGREGAR URI'")
+                                print(f"      - Escribe EXACTAMENTE: {redirect_uri_to_use}")
+                                print(f"      - Sin espacios, sin barra final, exactamente igual")
+                                print(f"   6. Haz clic en 'SAVE' o 'GUARDAR'")
+                                print(f"   7. Espera 2-3 minutos para que se apliquen los cambios")
+                                print(f"   8. Vuelve a ejecutar: python main.py --login")
+                                print(f"   9. IMPORTANTE: Copia el código INMEDIATAMENTE después de autorizar")
+                                print(f"      (los códigos expiran en ~10 minutos y solo se pueden usar una vez)\n")
+                                
                                 raise Exception(
-                                    f"Error: Código de autorización inválido o expirado.\n\n"
-                                    f"   Posibles causas:\n"
-                                    f"   1. El código ya fue usado (solo se puede usar una vez)\n"
-                                    f"   2. El código expiró (expiran en ~10 minutos)\n"
-                                    f"   3. El redirect_uri no coincide exactamente con Google Cloud Console\n"
-                                    f"      - Configurado en código: '{redirect_uri_to_use}'\n"
-                                    f"      - Debe estar en Google Cloud Console EXACTAMENTE igual\n\n"
-                                    f"   📋 Pasos para verificar:\n"
-                                    f"   1. Ve a: https://console.cloud.google.com/apis/credentials\n"
-                                    f"   2. Abre tu OAuth 2.0 Client ID\n"
-                                    f"   3. En 'Authorized redirect URIs', verifica que esté:\n"
-                                    f"      {redirect_uri_to_use}\n"
-                                    f"   4. Debe coincidir EXACTAMENTE (sin espacios, sin barra final)\n"
-                                    f"   5. Guarda los cambios y espera 2-3 minutos\n"
-                                    f"   6. Vuelve a ejecutar 'python main.py --login'\n\n"
-                                    f"   Error completo: {error_full}"
+                                    f"Error: invalid_grant - Bad Request\n\n"
+                                    f"   El redirect_uri '{redirect_uri_to_use}' probablemente NO está configurado\n"
+                                    f"   en Google Cloud Console, o no coincide exactamente.\n\n"
+                                    f"   Sigue los pasos de diagnóstico mostrados arriba."
                                 )
                             else:
                                 raise Exception(f"Error obteniendo token: {response.status_code} - {error_detail}")
