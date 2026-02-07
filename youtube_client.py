@@ -240,7 +240,27 @@ class YouTubeClient:
                         print(f"   > Tu OAuth 2.0 Client ID > Authorized redirect URIs")
                         print(f"   (debe coincidir EXACTAMENTE, sin espacios, sin barra final)\n")
                         
-                        response = requests.post(token_url, data=token_data)
+                        # Enviar solicitud con headers explícitos
+                        headers = {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'Accept': 'application/json'
+                        }
+                        
+                        response = requests.post(token_url, data=token_data, headers=headers)
+                        
+                        # Debug: mostrar respuesta completa si falla
+                        if response.status_code != 200:
+                            print(f"\n🔍 DEBUG - Información de la solicitud:")
+                            print(f"   URL: {token_url}")
+                            print(f"   Método: POST")
+                            print(f"   Headers: {headers}")
+                            print(f"   Data enviada:")
+                            print(f"     - code: {code[:50]}...")
+                            print(f"     - client_id: {config.CLIENT_ID}")
+                            print(f"     - redirect_uri: '{redirect_uri_to_use}'")
+                            print(f"     - grant_type: authorization_code")
+                            print(f"   Status Code: {response.status_code}")
+                            print(f"   Response: {response.text[:500]}")
                         
                         if response.status_code == 200:
                             token_info = response.json()
