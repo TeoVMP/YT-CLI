@@ -107,11 +107,11 @@ class YouTubeClient:
                     print("   6. Pégalo aquí (el código está en la URL)\n")
                     print("="*60 + "\n")
                     
-                    # En Termux, usar redirect_uri especial para móviles
-                    # Usar 'urn:ietf:wg:oauth:2.0:oob' que funciona sin servidor local
-                    mobile_redirect_uri = 'urn:ietf:wg:oauth:2.0:oob'
+                    # En Termux, usar redirect_uri que esté configurado en Google Cloud Console
+                    # Primero intentar con el redirect_uri configurado
+                    redirect_uri_to_use = config.REDIRECT_URI
                     
-                    # Crear flow con redirect_uri para móviles
+                    # Crear flow con redirect_uri explícito
                     flow_mobile = InstalledAppFlow.from_client_config(
                         {
                             "installed": {
@@ -119,17 +119,29 @@ class YouTubeClient:
                                 "client_secret": config.CLIENT_SECRET,
                                 "auth_uri": "https://accounts.google.com/o/oauth2/auth",
                                 "token_uri": "https://oauth2.googleapis.com/token",
-                                "redirect_uris": [mobile_redirect_uri, config.REDIRECT_URI]
+                                "redirect_uris": [redirect_uri_to_use]
                             }
                         },
                         config.YOUTUBE_SCOPES
                     )
                     
+                    # Generar URL de autorización con redirect_uri explícito
                     auth_url, state = flow_mobile.authorization_url(
                         prompt='consent',
                         access_type='offline',
                         include_granted_scopes='true'
                     )
+                    
+                    # Asegurar que redirect_uri esté en la URL (agregarlo si falta)
+                    from urllib.parse import urlencode, parse_qs, urlparse, urlunparse
+                    parsed = urlparse(auth_url)
+                    params = parse_qs(parsed.query)
+                    
+                    # Si redirect_uri no está en los parámetros, agregarlo
+                    if 'redirect_uri' not in params:
+                        params['redirect_uri'] = [redirect_uri_to_use]
+                        new_query = urlencode(params, doseq=True)
+                        auth_url = urlunparse(parsed._replace(query=new_query))
                     
                     print(f"\n📋 Por favor, visita esta URL en tu navegador:")
                     print(f"\n{auth_url}\n")
