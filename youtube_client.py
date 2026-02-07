@@ -317,8 +317,8 @@ class YouTubeClient:
                                 f"   en Google Cloud Console, o no coincide exactamente.\n\n"
                                 f"   Sigue los pasos de diagnóstico mostrados arriba."
                             )
-                            else:
-                                raise Exception(f"Error obteniendo token: {response.status_code} - {error_detail}")
+                        else:
+                            raise Exception(f"Error obteniendo token: {response.status_code} - {error_detail}")
                 else:
                     print("🌐 Se abrirá tu navegador automáticamente...")
                     print("   Si no se abre, copia la URL que aparecerá.\n")
