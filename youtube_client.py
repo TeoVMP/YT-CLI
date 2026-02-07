@@ -159,6 +159,7 @@ class YouTubeClient:
                     user_input = input("\n📋 Pega la URL completa o solo el código: ").strip()
                     
                     # Extraer el código de la URL si el usuario pegó la URL completa
+                    code = None
                     if 'code=' in user_input:
                         from urllib.parse import urlparse, parse_qs
                         # Si es una URL completa, extraer el código
@@ -174,17 +175,22 @@ class YouTubeClient:
                                     fragment_params = parse_qs(fragment)
                                     if 'code' in fragment_params:
                                         code = fragment_params['code'][0]
-                                    else:
-                                        code = user_input
-                                else:
-                                    code = user_input
-                        else:
-                            code = user_input
-                    else:
+                    
+                    # Si no se extrajo código de la URL, usar el input directamente
+                    if not code:
                         code = user_input
                     
                     # Limpiar el código (remover espacios, saltos de línea, etc.)
-                    code = code.strip().replace('\n', '').replace('\r', '')
+                    code = code.strip().replace('\n', '').replace('\r', '').replace(' ', '')
+                    
+                    # Validar que el código tenga la longitud mínima esperada
+                    if len(code) < 30:
+                        raise Exception(
+                            f"El código parece estar incompleto (solo {len(code)} caracteres).\n"
+                            f"   Por favor, copia la URL COMPLETA después de autorizar.\n"
+                            f"   Ejemplo: http://localhost:8080/?code=4/0ASc3gC...&scope=...\n"
+                            f"   El código debe tener al menos 30 caracteres."
+                        )
                     
                     print(f"\n🔑 Código extraído: {code[:20]}...")
                     print(f"🔗 Usando redirect_uri: {redirect_uri_to_use}")
@@ -200,6 +206,14 @@ class YouTubeClient:
                         print("⚠️  Usando método alternativo para obtener token...")
                         import requests
                         
+                        # Verificar que el código esté completo (debe tener al menos 50 caracteres)
+                        if len(code) < 50:
+                            raise Exception(
+                                f"El código parece estar incompleto (solo {len(code)} caracteres).\n"
+                                f"   Por favor, copia la URL COMPLETA después de autorizar, no solo el código.\n"
+                                f"   El código debe tener al menos 50 caracteres."
+                            )
+                        
                         token_url = 'https://oauth2.googleapis.com/token'
                         token_data = {
                             'code': code,
@@ -210,6 +224,10 @@ class YouTubeClient:
                         }
                         
                         print(f"📤 Enviando solicitud de token...")
+                        print(f"   Client ID: {config.CLIENT_ID[:20]}...")
+                        print(f"   Redirect URI: {redirect_uri_to_use}")
+                        print(f"   Código: {code[:30]}... (longitud: {len(code)} caracteres)")
+                        
                         response = requests.post(token_url, data=token_data)
                         
                         if response.status_code == 200:
