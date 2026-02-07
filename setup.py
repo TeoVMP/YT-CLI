@@ -57,6 +57,14 @@ def get_credentials():
         print("✗ Client ID es requerido.")
         return None, None
     
+    # Limpiar Client ID si viene con https:// o http://
+    if client_id.startswith('https://'):
+        client_id = client_id.replace('https://', '', 1)
+        print("ℹ Se removió 'https://' del Client ID")
+    elif client_id.startswith('http://'):
+        client_id = client_id.replace('http://', '', 1)
+        print("ℹ Se removió 'http://' del Client ID")
+    
     client_secret = input("Ingresa tu GOOGLE_CLIENT_SECRET: ").strip()
     if not client_secret:
         print("✗ Client Secret es requerido.")

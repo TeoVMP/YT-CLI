@@ -241,6 +241,12 @@ Ejemplos de uso:
     )
     
     parser.add_argument(
+        '--audio-only',
+        action='store_true',
+        help='Reproducir solo el audio (MP3) de YouTube o Spotify (usar con --play, --play-playlist, o --play-spotify-playlist)'
+    )
+    
+    parser.add_argument(
         '--download-and-play',
         type=str,
         metavar='URL',
@@ -376,6 +382,12 @@ Ejemplos de uso:
     )
     
     parser.add_argument(
+        '--playlist-next',
+        action='store_true',
+        help='Skip to next track in currently playing playlist'
+    )
+    
+    parser.add_argument(
         '--play-spotify-playlist',
         type=str,
         metavar='SPOTIFY_PLAYLIST_URL_OR_ID',
@@ -405,8 +417,9 @@ Ejemplos de uso:
         # Verificar si es una URL o un archivo local
         if args.play.startswith('http://') or args.play.startswith('https://'):
             # Es una URL de YouTube
-            print(f"📺 Reproduciendo desde URL de YouTube...")
-            success = player.play_youtube_url(args.play, fullscreen=args.play_fullscreen)
+            mode_text = "audio (MP3)" if args.audio_only else "video"
+            print(f"📺 Reproduciendo desde URL de YouTube ({mode_text})...")
+            success = player.play_youtube_url(args.play, fullscreen=args.play_fullscreen, audio_only=args.audio_only)
         else:
             # Es un archivo local
             print(f"📁 Reproduciendo archivo local...")
@@ -792,14 +805,34 @@ Ejemplos de uso:
             video_urls = [video['url'] for video in videos]
             
             # Reproducir playlist
-            print(f"\n▶ Iniciando reproducción de la playlist...")
-            success = player.play_playlist(video_urls, fullscreen=args.play_fullscreen)
+            mode_text = "canciones (audio)" if args.audio_only else "videos"
+            print(f"\n▶ Iniciando reproducción de la playlist ({mode_text})...")
+            success = player.play_playlist(video_urls, fullscreen=args.play_fullscreen, audio_only=args.audio_only)
             
             if success:
-                print(f"\n✓ Reproducción iniciada. VLC reproducirá {len(video_urls)} videos secuencialmente.")
+                mode_text = "canciones (audio)" if args.audio_only else "videos"
+                print(f"\n✓ Reproducción iniciada. VLC reproducirá {len(video_urls)} {mode_text} secuencialmente.")
             else:
                 print("\n✗ Error iniciando la reproducción.")
                 sys.exit(1)
+            
+            sys.exit(0)
+        
+        # Modo: Siguiente canción en playlist (control remoto)
+        elif args.playlist_next:
+            from vlc_player import VLCPlayer
+            
+            print("\n" + "="*60)
+            print("CONTROL DE PLAYLIST")
+            print("="*60 + "\n")
+            
+            player = VLCPlayer()
+            
+            if player.next_track():
+                print("✓ Siguiente canción iniciada.")
+            else:
+                print("✗ No hay playlist reproduciéndose o ya estás en el último video.")
+                print("   Inicia una playlist primero con: py main.py --play-playlist PLAYLIST_ID")
             
             sys.exit(0)
         
@@ -830,13 +863,21 @@ Ejemplos de uso:
                 sys.exit(1)
             
             # Inicializar cliente de Spotify
+            # Intentar primero con token de acceso directo (si está configurado)
+            access_token = os.getenv('SPOTIFY_ACCESS_TOKEN')
+            
             try:
-                spotify_client = SpotifyClient(use_auth=False)  # Intentar sin auth primero
+                if access_token:
+                    print("ℹ Usando token de acceso directo de Spotify")
+                    spotify_client = SpotifyClient(use_auth=False, access_token=access_token)
+                else:
+                    spotify_client = SpotifyClient(use_auth=False)  # Intentar sin auth primero
             except ValueError as e:
                 print(f"⚠ {str(e)}")
-                print("\n💡 Para usar playlists privadas, configura SPOTIFY_CLIENT_ID y")
-                print("   SPOTIFY_CLIENT_SECRET en tu archivo .env")
-                print("\n   Obtén credenciales en: https://developer.spotify.com/dashboard")
+                print("\n💡 Opciones para configurar Spotify:")
+                print("   1. Configura SPOTIFY_CLIENT_ID y SPOTIFY_CLIENT_SECRET en .env")
+                print("   2. O usa un token de acceso temporal: SPOTIFY_ACCESS_TOKEN en .env")
+                print("   3. Obtén credenciales en: https://developer.spotify.com/dashboard")
                 print("\n   Por ahora, solo funcionará con playlists públicas.")
                 sys.exit(1)
             
@@ -923,11 +964,13 @@ Ejemplos de uso:
                     print(f"   ... y {len(not_found) - 5} más")
             
             # Reproducir playlist
-            print(f"\n▶ Iniciando reproducción de {len(video_urls)} videos...")
-            success = player.play_playlist(video_urls, fullscreen=args.play_fullscreen)
+            mode_text = "canciones (audio)" if args.audio_only else "videos"
+            print(f"\n▶ Iniciando reproducción de {len(video_urls)} {mode_text}...")
+            success = player.play_playlist(video_urls, fullscreen=args.play_fullscreen, audio_only=args.audio_only)
             
             if success:
-                print(f"\n✓ Reproducción iniciada. VLC reproducirá {len(video_urls)} videos secuencialmente.")
+                mode_text = "canciones (audio)" if args.audio_only else "videos"
+                print(f"\n✓ Reproducción iniciada. VLC reproducirá {len(video_urls)} {mode_text} secuencialmente.")
                 print(f"   Videos encontrados: {len(video_urls)}/{len(tracks)}")
             else:
                 print("\n✗ Error iniciando la reproducción.")
@@ -2090,8 +2133,11 @@ Ejemplos de uso:
                     videos = youtube_client.get_playlist_videos(playlist_id, max_results=100)
                     if videos:
                         video_urls = [video['url'] for video in videos]
-                        print(f"\n▶ Playing playlist with {len(video_urls)} videos...")
-                        success = player.play_playlist(video_urls)
+                        # En modo interactivo, preguntar si quiere solo audio
+                        audio_only = input("\n¿Reproducir solo audio (MP3)? (s/n): ").strip().lower() == 's'
+                        mode_text = "canciones (audio)" if audio_only else "videos"
+                        print(f"\n▶ Playing playlist with {len(video_urls)} {mode_text}...")
+                        success = player.play_playlist(video_urls, audio_only=audio_only)
                         if success:
                             print("✓ Playback started.")
                         else:
@@ -2144,8 +2190,11 @@ Ejemplos de uso:
                                 print(f"      ⚠ Not found")
                         
                         if video_urls:
-                            print(f"\n▶ Playing {len(video_urls)} videos...")
-                            success = player.play_playlist(video_urls)
+                            # En modo interactivo, preguntar si quiere solo audio
+                            audio_only = input("\n¿Reproducir solo audio (MP3)? (s/n): ").strip().lower() == 's'
+                            mode_text = "canciones (audio)" if audio_only else "videos"
+                            print(f"\n▶ Playing {len(video_urls)} {mode_text}...")
+                            success = player.play_playlist(video_urls, audio_only=audio_only)
                             if success:
                                 print("✓ Playback started.")
                             else:

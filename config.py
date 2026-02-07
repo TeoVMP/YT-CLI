@@ -20,7 +20,15 @@ YOUTUBE_SCOPES = [
 # 'https://www.googleapis.com/auth/gmail.modify'
 
 # Credenciales OAuth2
-CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
+# Limpiar Client ID si viene con https:// o http://
+raw_client_id = os.getenv('GOOGLE_CLIENT_ID', '')
+if raw_client_id:
+    # Remover https:// o http:// si están presentes
+    if raw_client_id.startswith('https://'):
+        raw_client_id = raw_client_id.replace('https://', '', 1)
+    elif raw_client_id.startswith('http://'):
+        raw_client_id = raw_client_id.replace('http://', '', 1)
+CLIENT_ID = raw_client_id if raw_client_id else None
 CLIENT_SECRET = os.getenv('GOOGLE_CLIENT_SECRET')
 REDIRECT_URI = os.getenv('REDIRECT_URI', 'http://localhost:8080')
 
@@ -31,6 +39,8 @@ API_KEY = os.getenv('YOUTUBE_API_KEY')
 SPOTIFY_CLIENT_ID = os.getenv('SPOTIFY_CLIENT_ID')
 SPOTIFY_CLIENT_SECRET = os.getenv('SPOTIFY_CLIENT_SECRET')
 SPOTIFY_REDIRECT_URI = os.getenv('SPOTIFY_REDIRECT_URI', 'http://localhost:8080')
+# Token de acceso temporal (opcional, para uso rápido sin configurar credenciales)
+SPOTIFY_ACCESS_TOKEN = os.getenv('SPOTIFY_ACCESS_TOKEN')
 
 # Validar que las credenciales estén configuradas (solo si se necesitan)
 # Las funciones de descarga NO requieren credenciales OAuth2
