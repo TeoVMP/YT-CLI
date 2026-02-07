@@ -24,34 +24,57 @@
 ### Paso 4: Verificar el Tipo de Aplicación
 
 1. En la página de edición, busca la sección **"Application type"** (Tipo de aplicación)
-2. Debe estar configurado como **"Desktop app"** (Aplicación de escritorio)
-3. Si NO está como "Desktop app":
-   - ⚠️ **PROBLEMA**: Necesitas crear un nuevo OAuth 2.0 Client ID
-   - Ve a la sección "Crear Nuevo OAuth 2.0 Client ID" más abajo
+2. Verifica si dice:
+   - **"Web application"** (Aplicación web) → Necesitas agregar redirect_uri manualmente
+   - **"Desktop app"** (Aplicación de escritorio) → Redirect_uri se configura automáticamente
 
 ### Paso 5: Configurar Authorized redirect URIs
 
-**Si el tipo es "Desktop app":**
+**Si el tipo es "Web application" (Aplicación web):**
 
-1. En la página de edición, busca la sección **"Authorized redirect URIs"** (URIs de redirección autorizados)
-   - Esta sección puede estar más abajo en la página
-   - O puede estar en una pestaña/separador
-2. Si NO ves esta sección:
-   - El OAuth 2.0 Client ID puede estar configurado como "Web application" en lugar de "Desktop app"
-   - Necesitas crear uno nuevo (ver sección abajo)
+1. En la página de edición, **desplázate hacia abajo** hasta encontrar la sección:
+   - **"Authorized redirect URIs"** (URIs de redirección autorizados)
+   - O **"URIs de redireccionamiento autorizados"** (en español)
+   
+2. Haz clic en **"+ ADD URI"** o **"+ AGREGAR URI"** o el botón de agregar
 
-3. Si SÍ ves la sección:
-   - Haz clic en **"+ ADD URI"** o en el botón de agregar
-   - En el campo que aparece, escribe **EXACTAMENTE**:
-     ```
-     http://localhost:8080
-     ```
+3. En el campo que aparece, escribe **EXACTAMENTE**:
+   ```
+   http://localhost:8080
+   ```
+   ⚠️ **IMPORTANTE para localhost:**
+   - Puedes usar `http://` (NO `https://`) para localhost
+   - Debe ser exactamente `http://localhost:8080`
+   - Sin espacios, sin barra final
+
+4. Presiona **Enter** o haz clic fuera del campo
+
+5. Si necesitas agregar más URIs, repite el proceso
+
+**Si el tipo es "Desktop app" (Aplicación de escritorio):**
+
+- Para "Desktop app", Google usa `http://localhost` automáticamente
+- NO necesitas agregar el redirect_uri manualmente
+- Si tienes problemas, puedes crear uno nuevo como "Web application" y agregar el redirect_uri
 
 ### ⚠️ Si NO encuentras "Authorized redirect URIs"
 
-**Esto significa que tu OAuth 2.0 Client ID está configurado como "Web application" en lugar de "Desktop app".**
+**Esto puede significar:**
+1. Tu OAuth 2.0 Client ID está configurado como "Desktop app" (no muestra la opción)
+2. O estás viendo una página diferente
 
-**Solución: Crear un nuevo OAuth 2.0 Client ID**
+**Solución 1: Si es "Desktop app" y funciona automáticamente**
+- Para "Desktop app", `http://localhost:8080` debería funcionar sin configuración adicional
+- Si no funciona, prueba la Solución 2
+
+**Solución 2: Cambiar a "Web application" y agregar redirect_uri**
+
+**Opción A: Editar el existente (si Google lo permite)**
+1. En la página de edición, busca "Application type"
+2. Si puedes cambiarlo a "Web application", hazlo
+3. Luego agrega el redirect_uri como se explica arriba
+
+**Opción B: Crear un nuevo OAuth 2.0 Client ID como "Web application"**
 
 1. En la página de Credentials, haz clic en **"+ CREATE CREDENTIALS"** (Crear credenciales)
 2. Selecciona **"OAuth client ID"**
@@ -62,17 +85,19 @@
    - En "Scopes", agrega: `https://www.googleapis.com/auth/youtube.force-ssl`
    - Agrega tu email como "Test user"
    - Guarda y continúa
-4. En "Application type", selecciona **"Desktop app"** (NO "Web application")
-5. Dale un nombre, por ejemplo: "YouTube Bot Desktop"
-6. Haz clic en **"CREATE"** (Crear)
-7. **IMPORTANTE**: Copia el nuevo Client ID y Client Secret
-8. Actualiza tu archivo `.env` con estos nuevos valores:
-   ```
-   GOOGLE_CLIENT_ID=tu_nuevo_client_id
-   GOOGLE_CLIENT_SECRET=tu_nuevo_client_secret
-   ```
-9. Para "Desktop app", el redirect_uri `http://localhost:8080` se configura automáticamente
-   - Pero puedes agregarlo manualmente si es necesario
+4. En "Application type", selecciona **"Web application"** (Aplicación web)
+5. Dale un nombre, por ejemplo: "YouTube Bot Web"
+6. **IMPORTANTE**: En "Authorized redirect URIs", haz clic en "+ ADD URI"
+7. Agrega: `http://localhost:8080`
+8. Haz clic en **"CREATE"** (Crear)
+9. **IMPORTANTE**: Copia el nuevo Client ID y Client Secret
+10. Actualiza tu archivo `.env` con estos nuevos valores:
+    ```
+    GOOGLE_CLIENT_ID=tu_nuevo_client_id
+    GOOGLE_CLIENT_SECRET=tu_nuevo_client_secret
+    ```
+11. Guarda el archivo `.env`
+12. Vuelve a intentar el login
    ⚠️ **IMPORTANTE:**
    - Debe ser `http://` (NO `https://`)
    - Debe ser `localhost` (NO `127.0.0.1`)
